@@ -224,7 +224,7 @@ valid or not it is sufficient to check for an http 2xx status code.
 Great! We've seen now how to use a service registry in order to realize service-to-service communication. But there are still a few drawbacks with this solution:
 * The use of **RestTemplate** can become cumbersome since we need to mix up REST API code with business logic which is not a good practice
 * When there is more than one running instance of a Microservice we would have to define which instance to call and when
-* There are currently no strategies when a Microservice doesn't respond to incoming calls or when it fails completely. How should we react in an environment of distributed Services without compromising other services?
+* There are currently no strategies for what to do when a Microservice doesn't respond to incoming calls or when it fails completely. How should we react in an environment of distributed Services without compromising other services?
 
 Fortunately there is a solution to those questions. We will see how to resolve them in the upcoming sections.
 
