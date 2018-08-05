@@ -1,11 +1,11 @@
 package my.demo.springboot.microservice.account.domain;
 
+import org.springframework.stereotype.Service;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.springframework.stereotype.Service;
 
 @Service
 public class AccountService {
