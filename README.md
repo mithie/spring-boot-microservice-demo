@@ -17,6 +17,7 @@ Git sub branches are named with a trailing two-digit number followed by the bran
 Currently the following branches can be checked out separately:
 * **01_Initial_Boot_Setup**
 * **02_First_Service**
+* **03_Service_Discovery**
 
 Checkout a sub branch
 ```
@@ -32,6 +33,14 @@ The application will provide a set of common good practices for Microservice dev
 **01_Initial_Boot_Setup** and **02_First_Service** demonstrate how to get started with Spring Cloud Microservice Development. In a few simple steps we will see
 how easy it is to create a production ready Microservice in almost no time.
 
+### Service Registry and Discovery
+
+**03_Service_Discovery** shows how to set up a service registry in Spring Boot and how to let services communicate with each other through this registry.
+
 ## Detail Description
 
 See [Detail Description](DETAIL-DESCRIPTION.md) for an in-depth explanation of the current features of this demo application.
+
+## How-to run the app
+
+See [How-to run](HOW-TO-RUN.md) for further details.
