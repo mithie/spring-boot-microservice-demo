@@ -59,3 +59,8 @@ See [Detail Description](DETAIL-DESCRIPTION.md) for an in-depth explanation of t
 ## How-to run the app
 
 See [How-to run](HOW-TO-RUN.md) for further details.
+
+## References
+
+[Spring Boot 2](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.0-Release-Notes)
+[Spring Cloud](https://spring.io/blog/2018/06/19/spring-cloud-finchley-release-is-available)
