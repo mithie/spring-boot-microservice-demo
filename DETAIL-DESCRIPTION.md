@@ -3,7 +3,7 @@
 2. [First Service](#02_First_Service)
 3. [Service Discovery](#03_Service_Discovery)
 
-# 01_Initial_Boot_Setup <a name="01_Initial_Boot_Setup"/>
+# 1.Initial_Boot_Setup <a name="01_Initial_Boot_Setup"/>
 
 Feature **01_Initial_Boot_Setup** just contains a simple project template that you will get when you create a
 new Spring Boot app with [Spring Initializr](https://start.spring.io/). This is the best point to get you started
@@ -11,7 +11,7 @@ when a new Microservice should be created. This project template compiles and bu
 any useful functionality. There's one RESTful service endpoint in `account-service` project returning a simple
 String message when called.
 
-# 02_First_Service <a name="02_First_Service"/>
+# 2.First_Service <a name="02_First_Service"/>
 
 Feature **02_First_Service** contains the Account Service, the first of the two Microservices. This service
 simply manages user accounts in a CRUD based fashion. There's not yet any database access (even tough the use of
@@ -224,7 +224,7 @@ See [Spring Boot Testing](https://spring.io/guides/gs/testing-web/) for further 
 
 Very good! We just implemented a simple Microservice in no time.
 
-# 03_Service_Discovery <a name="03_Service_Discovery"/>
+# 3.Service_Discovery <a name="03_Service_Discovery"/>
 
 **03_Service_Discovery** additionally contains the Todo Service, the second of our two Microservices. Todo Service will gather information
 from Accouunt Service when for example a new Todo will be created. For the communication between the services [Spring's RestTemplate](https://spring.io/guides/gs/consuming-rest/)
