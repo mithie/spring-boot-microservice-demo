@@ -1,11 +1,12 @@
-server:
-  port: 8081
-
 spring:
   application:
-    name: account-service
+    name: account
 
 eureka:
+  instance:
+    hostname: account
   client:
+    registerWithEureka: true
+    fetchRegistry: true
     serviceUrl:
       defaultZone: http://${eureka.host:localhost}:${eureka.port:8761}/eureka/

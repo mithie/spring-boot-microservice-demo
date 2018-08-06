@@ -33,35 +33,11 @@ mvn clean package
 
 ```
 
-#### Automated run.sh script
-
-Open a new shell in the projects's root folder and execute the run shell script.
-
-```
-sh run.sh
-```
-
-Wait a few seconds and verify if the services have been started properly.
-```
-ps |grep java
-
-13048 ttys001    0:00.00 grep java
-12932 ttys002    0:43.43 /usr/bin/java -jar eureka-service/target/eureka-service-0.0.1-SNAPSHOT.jar
-12992 ttys002    0:43.90 /usr/bin/java -jar account-service/target/account-service-0.0.1-SNAPSHOT.jar
-12993 ttys002    0:44.06 /usr/bin/java -jar todo-service/target/todo-service-0.0.1-SNAPSHOT.jar
-```
-
-The services can now be accessed through the endpoints mentioned under [Service Enpoints and URLs](#Service Enpoints and URLs)
-
-To shutdown the application simply run the shutdown script in the shell you opened before. Verification of a successful shutdown can again be
-done with the ps command from the previous step.
-```
-sh shutdown.sh
-```
 
 #### Manual setup
 
-You can also run each of the services manually in a custom shell. To do this open a shell for each of the three services.
+For testing purposes run each of the services manually in a custom shell. Since we want to test the load-balancing behavior of Ribbon
+we will start two instances of account service running on different ports.
 
 `spring-boot-microservice-demo/eureka-service`
 ```
@@ -70,13 +46,81 @@ java -jar target/eureka-service-0.0.1-SNAPSHOT.jar
 
 `spring-boot-microservice-demo/account-service`
 ```
-java -jar target/account-service-0.0.1-SNAPSHOT.jar
+java -jar -Dserver.port=8081 target/account-service-0.0.1-SNAPSHOT.jar
+```
+
+`spring-boot-microservice-demo/account-service`
+```
+java -jar -Dserver.port=8082 target/account-service-0.0.1-SNAPSHOT.jar
 ```
 
 `spring-boot-microservice-demo/todo-service`
 ```
-java -jar target/todo-service-0.0.1-SNAPSHOT.jar
+java -jar -Dserver.port=9090 target/todo-service-0.0.1-SNAPSHOT.jar
 ```
+
+## Testing the application behavior
+
+Since we are now using Ribbon as client-side load balancer we can test different runtime scenarios of our application stack.
+We're especially interested in the application behavior when something happens to the Account Service in between its communication with Todo Service.
+
+Let's try and examine the following scenarios:
+
+1. Both Account Service instances are up and running. This means that Ribbon should consecutively call one of the two instances.
+2. One Account Service instance goes down. We want to be sure that Ribbon automatically chooses the only remaining instance.
+3. Both Account Service instances are down. This will return an exception, because we don't have any sort of fallback functionality at hand.
+
+Ok, let's test each of those scenarios and begin with the first one:
+
+### 1. Ribbon two-instance scenario
+In this scenario both instances can be reached and should be called in traditional round robin fashion. To test this we open a new shell and execute the following
+CURL command two times:
+
+```
+curl http://localhost:9090/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos |json_pp
+```
+
+When we open the shell where the **todo-service** is running we should see a log output similar to the following:
+
+```
+NFLoadBalancer:name=account,current list of Servers=[10.159.144.117:8082, 10.159.144.117:8081],Load balancer stats=Zone stats: {defaultzone=[Zone:defaultzone;  Instance count:2;       Active connections count: 0;      Circuit breaker tripped count: 0;       Active connections per server: 0.0;]
+},Server stats: [[Server:10.159.144.117:8082;   Zone:defaultZone;       Total Requests:0;       Successive connection failure:0;        Total blackout seconds:0;       Last connection made:Thu Jan 01 01:00:00 CET 1970;        First connection made: Thu Jan 01 01:00:00 CET 1970;    Active Connections:0;   total failure count in last (1000) msecs:0;     average resp time:0.0;  90 percentile resp time:0.0;      95 percentile resp time:0.0;    min resp time:0.0;      max resp time:0.0;      stddev resp time:0.0]
+, [Server:10.159.144.117:8081;  Zone:defaultZone;       Total Requests:0;       Successive connection failure:0;        Total blackout seconds:0;       Last connection made:Thu Jan 01 01:00:00 CET 1970;        First connection made: Thu Jan 01 01:00:00 CET 1970;    Active Connections:0;   total failure count in last (1000) msecs:0;     average resp time:0.0;  90 percentile resp time:0.0;      95 percentile resp time:0.0;    min resp time:0.0;      max resp time:0.0;      stddev resp time:0.0]
+]}ServerList:DiscoveryEnabledNIWSServerList:; clientName:account; Effective vipAddresses:account; isSecure:false; datacenter:null
+
+2018-08-02 11:10:17.939  INFO 88681 --- [nio-9090-exec-1] tClient$$EnhancerBySpringCGLIB$$b5024786 : Service called on host: 10.159.144.117, port: 8081
+2018-08-02 11:10:28.021  INFO 88681 --- [nio-9090-exec-2] tClient$$EnhancerBySpringCGLIB$$b5024786 : Service called on host: 10.159.144.117, port: 8082
+
+```
+
+Notice that ribbon automatically switches between the service instances running on port 8081 and 8082 which is pretty cool since it shows us that the load balancing is working without having us spent too much effort on that item.
+
+
+### 2. Ribbon one-instance scenario
+
+Now let's try the next scenario. We will shutdown one of the two Account Service instances. As a result there shouldn't be any obvious changes visible to the consuming application since Ribbon will
+recognize in the background that there's only one service instance remaining. If you try out the same CURL request as in step 1 you will see that service calls are transparently handled by Ribbon
+
+### 3. Ribbon no-instance scenario
+
+Assuming there is currently no running instance of **account-service** available, how should our Todo Application react? The best of course would be if it still responds with a valid result. But since we didn't define a fallback behavior yet the call
+will just fail and respond with an error message.
+
+Let's try it out. First we will shut down the single remaining **account-service** instance and wait for a few seconds until the instance has been deregistered from Eureka. We then issue the same CURL command as we did before
+and look at the log output of the **todo-service** instance.
+
+```
+{
+   "timestamp" : "2018-08-02T09:17:26.231+0000",
+   "status" : 500,
+   "message" : "URI is required",
+   "path" : "/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos",
+   "error" : "Internal Server Error"
+}
+```
+
+As we can see an HTTP 500 error is returned without any further information about the originating cause of the exception. This is probably the worst thing that could happen, because the consuming service is left alone with an exception it cannot handle.
+Fortunately we can do better and provide a more intuitive user experience by specifying a well-defined fallback behavior. **06_Feign_And_Hystrix** will extend this sample application and show a way to do just that.
 
 ## Testing the endpoints
 
@@ -167,7 +211,7 @@ will return
 
 #### Get all Todos
 ```
-curl http://localhost:8082/todos |json_pp
+curl http://localhost:9090/todos |json_pp
 ```
 
 will return
@@ -216,7 +260,7 @@ will return
 ```
 #### Get Todos for a specific Account id
 ```
-curl http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos |json_pp
+curl http://localhost:9090/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos |json_pp
 ```
 
 will return
@@ -250,7 +294,7 @@ will return
 ```
 #### Add a new Todo
 ```
-curl -d '{"accountId":"a52dc637-d932-4998-bb00-fe7f248319fb","email":"Jane.Doe@foo.bar","description":"invite friends","completed":"false"}' -H "Content-Type: application/json" -X POST http://localhost:8082/todos |json_pp
+curl -d '{"accountId":"a52dc637-d932-4998-bb00-fe7f248319fb","email":"Jane.Doe@foo.bar","description":"invite friends","completed":"false"}' -H "Content-Type: application/json" -X POST http://localhost:9090/todos |json_pp
 ```
 
 will return
@@ -276,8 +320,10 @@ will return
 Service | URI | HTTP Method | Description
 --- | --- | --- | ---
 Account Service | http://localhost:8081/accounts | GET | shows all existing accounts
+Account Service | http://localhost:8082/accounts | GET | -
 Account Service | http://localhost:8081/accounts/{id} | GET | shows all accounts for a specific account id
-Todo Service | http://localhost:8082/todos | GET | shows all existing todos
-Todo Service | http://localhost:8082/todos | POST | endpoint for adding a new todo
-Todo Service | http://localhost:8082/accounts/{accountid}/todos | GET | shows all todos for a specific account id
+Account Service | http://localhost:8082/accounts/{id} | GET | -
+Todo Service | http://localhost:9090/todos | GET | shows all existing todos
+Todo Service | http://localhost:9090/todos | POST | endpoint for adding a new todo
+Todo Service | http://localhost:9090/accounts/{accountid}/todos | GET | shows all todos for a specific account id
 Eureka Dashboard | http://localhost:8761 | GET | show the Eureka dashboard
