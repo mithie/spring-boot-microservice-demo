@@ -1,45 +1,110 @@
-# Spring Boot Microservice Demo
+# 04_Hateoas
 
-This project demonstrates the usage of Spring Boot and Spring Cloud for creating a simple cloud-native eco system.
-The concepts shown use several [Spring Boot starters](https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#using-boot-starter) which facilitate the creation of Microservice based applications. The features included in this application scenario are outlined below.
+## Demonstrated Principle
 
-To keep things simple there will only be two services interacting with each other for the time being.
+Item **04_Hateoas** demonstrates the use of [HATEOAS](https://spring.io/understanding/HATEOAS) (= Hypertext as the Engine of Application State) and enables a consumer of a service to dynamically
+navigate through a RESTful API. This should be done right from the beginning of RESTful API design with regard to designing mature REST APIs.
+The great advantage of this approach is that a client then only needs to know the initial URI of a service endpoint and can then dynamically
+decide where to go next based on the hypermedia links provided by the service. Spring Boot uses [HAL](https://en.wikipedia.org/wiki/Hypertext_Application_Language) for defining hypermedia links and
+ships with a great starter project which takes away a lot of the pain compared to when you'd have to do this by yourself.
 
-- Account Service - A service managing account functionality of a user.
-- Todo Service - A simple service managing todos. A Todo will be related to a user's account which makes it necessary for the two services to exchange data.
+### How does it work?
 
-This repository contains several consecutive git branches where each branch demonstrates a single principle (see [Demonstrated Principles](#demonstrated-principles)) of a Microservice application stack. In order to run the complete stack including all of the explained features in the sub branches you need to check out and build the master branch.
+Creating solid RESTful APIs is not a trivial task if you want to do it right. There are lots of pitfalls and drawbacks, especially when you try to do
+something beyond the usual CRUD stuff. Lots of people still design their RESTful APIs in RPC style which is common practice when developing SOAP based
+Services. But this has nothing to do with RESTful design paradigms. However, there's a great [guide](https://martinfowler.com/articles/richardsonMaturityModel.html) which can help to avoid at least
+the greatest mistakes.
 
-***Note*** that detail descriptions are contained in each sub branch's README.md as well as in the [Detail Description](DETAIL-DESCRIPTION.md) section.
+HATEOAS means Hypertext as the Engine of Application State and is a quite powerful concept which allows dynamic redirecting of clients to other servers
+without the need to change the client. The principle is comparable to a browser where you can click on a link and navigate through the application by following subsequent links without
+the need to know where the servers are located. Spring Boot provides a starter project facilitating the use of HATEOAS.
 
-Git sub branches are named with a trailing two-digit number followed by the branch name and highlighted in **bold** font.
+#### Setup the environment
 
-Currently the following branches can be checked out separately:
-* **01_Initial_Boot_Setup**
-* **02_First_Service**
-* **03_Service_Discovery**
+First we add the Spring Boot starter dependencies to the **account-service** and **todo-service** project pom files.
 
-Checkout a sub branch
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-hateoas</artifactId>
+    </dependency>
+</dependencies>
 ```
-git checkout -b [BRANCH_ID]_[BRANCH_NAME] origin/[BRANCH_NAME], e.g. git checkout -b 02_First_Service origin/02_First_Service
+
+Then let's look at the **TodoController**.
+
+```java
+@RequestMapping(path = "/accounts/{accountid}/todos", method = RequestMethod.GET, produces = "application/hal+json")
+public ResponseEntity<Resources<TodoResource>> findAllByAccountId(@PathVariable("accountid") UUID accountId){
+    List<Todo> todos = todoService.findAllById(accountId);
+
+    final URI uri = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
+
+    return ResponseEntity.ok(todoResources(todos));
+}
 ```
 
-## Demonstrated Principles
+Instead of simply returning a List of Todo objects we wrap the response in a **Resources** object which allows us to build the hyperlinks our client should follow.
 
-The application will provide a set of common good practices for Microservice development. To get accustomed with general principles of distributed application development a good source of reading as a starter is [The Twelve-Factor App](https://12factor.net/). You'll see a lot of those principles already built-in in Spring Cloud.
+```java
+private Resources<TodoResource> todoResources(List<Todo> todos) {
+    final List<TodoResource> todoResources = todos.stream().map(TodoResource::new).collect(Collectors.toList());
 
-### Simple Spring Boot Microservice
+    final Resources<TodoResource> resources = new Resources(todoResources);
 
-**01_Initial_Boot_Setup** and **02_First_Service** demonstrate how to get started with Spring Cloud Microservice Development. In a few simple steps we will see
-how easy it is to create a production ready Microservice in almost no time.
+    final String uriString = ServletUriComponentsBuilder.fromCurrentRequest().build().toUriString();
+    resources.add(linkTo(methodOn(TodoController.class).findAll()).withSelfRel());
 
-### Service Registry and Discovery
+    return resources;
+}
+```
 
-**03_Service_Discovery** shows how to set up a service registry in Spring Boot and how to let services communicate with each other through this registry.
+Based upon the **TodoController** method **findAll** a new hyperlink will be created for every Todo telling the client exactly how the reference to this resource looks like and how it can be retrieved.
+Looking at the response from a request to **accounts/4e696b86-257f-4887-8bae-027d8e883638/todos** we will see the following result.
 
-## Detail Description
+```
+curl http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos |json_pp
+```
 
-See [Detail Description](DETAIL-DESCRIPTION.md) for an in-depth explanation of the current features of this demo application.
+```json
+{
+   "_embedded" : {
+      "todoResourceList" : [
+         {
+            "todo" : {
+               "completed" : false,
+               "todoId" : "f85b1164-6bd6-4a74-9f01-d49d9802ff96",
+               "description" : "Clean Dishes",
+               "email" : "John.Doe@foo.bar",
+               "accountId" : "4e696b86-257f-4887-8bae-027d8e883638"
+            },
+            "_links" : {
+               "self" : {
+                  "href" : "http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+               }
+            }
+         }
+      ]
+   },
+   "_links" : {
+      "self" : {
+         "href" : "http://localhost:8082/todos"
+      }
+   }
+}
+```
+
+Now we see that for every Todo there is an **href** generated pointing the client exactly to this resource.
+
+Also, have a look into the test for the newly adjusted service under `src/test/java/my/demo/springboot/microservice/todo/TodoServiceApplicationTests.java`
+
+### Related Readings
+
+A good article for getting started with Spring Boot and HATEOAS support can be found at [REST Hateoas](https://spring.io/guides/gs/rest-hateoas/)
+
+As always are different opinions whether it is good or not to use HATEOAS. The following [article](https://medium.com/@andreasreiser94/why-hateoas-is-useless-and-what-that-means-for-rest-a65194471bc8) provides a more controversial discussion of this topic.
+However, I would say that using HATEOAS with Spring Boot comes in quite handy and as long as no other Web API concept is used it provides good readability of an API.
 
 ## How-to run the app
 
