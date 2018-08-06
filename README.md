@@ -18,6 +18,7 @@ Currently the following branches can be checked out separately:
 * **01_Initial_Boot_Setup**
 * **02_First_Service**
 * **03_Service_Discovery**
+* **04_Hateoas**
 
 Checkout a sub branch
 ```
@@ -36,6 +37,11 @@ how easy it is to create a production ready Microservice in almost no time.
 ### Service Registry and Discovery
 
 **03_Service_Discovery** shows how to set up a service registry in Spring Boot and how to let services communicate with each other through this registry.
+
+### Hateoas Support
+
+**04_Hateoas** makes a short excursion to the field of RESTful API design and how to create [mature](https://martinfowler.com/articles/richardsonMaturityModel.html)
+REST APIs.
 
 ## Detail Description
 
