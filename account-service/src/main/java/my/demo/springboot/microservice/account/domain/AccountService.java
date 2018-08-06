@@ -1,30 +1,41 @@
 package my.demo.springboot.microservice.account.domain;
 
-import org.springframework.stereotype.Service;
-
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class AccountService {
 
-    private static Map<Long, Account> accountRepository = null;
-
+    private static Map<UUID, Account> accountRepository = null;
 
     static {
-        Stream<String> accountStream = Stream.of("1,John,Doe,John.Doe@foo.bar", "2,Jane,Doe,Jane.Doe@foo.bar");
-        accountRepository = accountStream.map(account -> {
+        final UUID accountOneId = UUID.fromString("4e696b86-257f-4887-8bae-027d8e883638");
+        final UUID accountTwoId = UUID.fromString("a52dc637-d932-4998-bb00-fe7f248319fb");
+
+        final Stream<String> accountStream = Stream.of(accountOneId.toString() + ",John.Doe@foo.bar,Clean Dishes,false", accountTwoId.toString() + ",Jane.Doe@foo.bar,Pay Bills,false");
+
+        AccountService.accountRepository = accountStream.map(account -> {
                 String[] info = account.split(",");
-        return new Account(new Long(info[0]), info[1], info[2], info[3]);
-        }).collect(Collectors.toMap(Account::getId, usr -> usr));
+        return new Account(UUID.fromString(info[0]), info[1], info[2], info[3]);
+        }).collect(Collectors.toMap(Account::getAccountId, usr -> usr));
     }
 
-    public Account findById(Long id) {
-        return accountRepository.get(id);
+    public Account findById(final UUID id) {
+        final Account account = AccountService.accountRepository.get(id);
+
+        if(account==null) {
+            throw new IllegalStateException(String.format("Account with id %s not found", id));
+        }
+        return account;
     }
-    public Collection<Account> findAll() {
-        return accountRepository.values();
+
+    public List<Account> findAll() {
+        return new ArrayList<>(AccountService.accountRepository.values());
     }
 }
