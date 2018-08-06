@@ -72,7 +72,7 @@ Let's try and examine the following scenarios:
 
 Ok, let's test each of those scenarios and begin with the first one:
 
-### 1. Ribbon two-instance scenario
+### 1. Two-instance scenario
 In this scenario both instances can be reached and should be called in traditional round robin fashion. To test this we open a new shell and execute the following
 CURL command two times:
 
@@ -96,12 +96,12 @@ NFLoadBalancer:name=account,current list of Servers=[10.159.144.117:8082, 10.159
 Notice that ribbon automatically switches between the service instances running on port 8081 and 8082 which is pretty cool since it shows us that the load balancing is working without having us spent too much effort on that item.
 
 
-### 2. Ribbon one-instance scenario
+### 2. One-instance scenario
 
 Now let's try the next scenario. We will shutdown one of the two Account Service instances. As a result there shouldn't be any obvious changes visible to the consuming application since Ribbon will
 recognize in the background that there's only one service instance remaining. If you try out the same CURL request as in step 1 you will see that service calls are transparently handled by Ribbon
 
-### 3. Ribbon no-instance scenario
+### 3. No-instance scenario
 
 Assuming there is currently no running instance of **account-service** available, how should our Todo Application react? The best of course would be if it still responds with a valid result. But since we didn't define a fallback behavior yet the call
 will just fail and respond with an error message.
