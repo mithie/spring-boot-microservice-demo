@@ -11,7 +11,7 @@ when a new Microservice should be created. This project template compiles and bu
 any useful functionality. There's one RESTful service endpoint in `account-service` project returning a simple
 String message when called.
 
-# 02_First_Service
+# 02_First_Service <a name="02_First_Service"/>
 
 Feature **02_First_Service** contains the Account Service, the first of the two Microservices. This service
 simply manages user accounts in a CRUD based fashion. There's not yet any database access (even tough the use of
