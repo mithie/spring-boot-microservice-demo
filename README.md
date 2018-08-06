@@ -1,54 +1,153 @@
-[![Build Status](https://travis-ci.com/mithie/spring-boot-microservice-demo.svg?branch=master)](https://travis-ci.com/mithie/spring-boot-microservice-demo)
-[![MIT License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/mithie/spring-boot-microservice-demo/blob/master/LICENSE)
+# 05_Eureka_And_Ribbon
 
-# Spring Boot Microservice Demo 
+## Demonstrated Principle
 
-This project demonstrates the usage of Spring Boot and Spring Cloud for creating a simple cloud-native eco system.
-The concepts shown use several [Spring Boot starters](https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#using-boot-starter) which facilitate the creation of Microservice based applications. The features included in this application scenario are outlined below.
+Branch **05_Eureka_And_Ribbon** demonstrates client-side load-balancing with Spring Clound Ribbon in
+combination with Spring Cloud Eureka. In contrast to server-side load-balancing where a central load balancer (either hardware
+or software) decides to which server requests should be forwarded a client-side load balancer can itself decide which
+servers to call. This works either dynamically through a service discovery like Eureka or statically with a fixed set of
+pre-defined server instances. In our example we will use Ribbon to dynamically resolve account service instances from Todo Service.
 
-To keep things simple there will only be two services interacting with each other for the time being.
+### How does it work?
 
-- Account Service - A service managing account functionality of a user.
-- Todo Service - A simple service managing todos. A Todo will be related to a user's account which makes it necessary for the two services to exchange data.
+In order to use Ribbon we first include the starter dependency in the pom file of the **todo-service** project.
 
-This repository contains several consecutive git branches where each branch demonstrates a single principle (see [Demonstrated Principles](#demonstrated-principles)) of a Microservice application stack. In order to run the complete stack including all of the explained features in the sub branches you need to check out and build the master branch.
-
-***Note*** that detail descriptions are contained in each sub branch's README.md as well as in the [Detail Description](DETAIL-DESCRIPTION.md) section.
-
-Git sub branches are named with a trailing two-digit number followed by the branch name and highlighted in **bold** font.
-
-Currently the following branches can be checked out separately:
-* **01_Initial_Boot_Setup**
-* **02_First_Service**
-* **03_Service_Discovery**
-* **04_Hateoas**
-
-Checkout a sub branch
-```
-git checkout -b [BRANCH_ID]_[BRANCH_NAME] origin/[BRANCH_NAME], e.g. git checkout -b 02_First_Service origin/02_First_Service
+`spring-boot-microservice-demo/todo-service/pom.xml`
+```xml
+<dependencies>
+    ...
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+    </dependency>
+</dependencies>
 ```
 
-## Demonstrated Principles
+We will now teach our service to use Ribbon by adding the **@RibbonClient** annotation to our Spring Boot application. We provide the name of the service we want to access with Ribbon and
+a separate configuration class that might contain customizations of the load-balancing behavior.
 
-The application will provide a set of common good practices for Microservice development. To get accustomed with general principles of distributed application development a good source of reading as a starter is [The Twelve-Factor App](https://12factor.net/). You'll see a lot of those principles already built-in in Spring Cloud.
+`spring-boot-microservice-demo/todo-service/src/main/java/my/demo/springboot/microservice/todo/TodoServiceApplication.java`
+```java
+...
+@SpringBootApplication
+@EnableDiscoveryClient
+@RibbonClient(name = "account", configuration = AccountConfiguration.class)
+public class TodoServiceApplication {
+    public static void main(final String[] args) {
+        run(TodoServiceApplication.class, args);
+    }
+}
+```
 
-### Simple Spring Boot Microservice
+In the **AccountConfiguration** we can customize the load-balancing behavior, i.e. we explicitly tell Ribbon to use round robin as load-balancing rule.
+Notice that since we are using the `ribbonPing` method we need to add a `RequestMapping` to the root path `/` within the `AccountController` class, so that Ribbon will be able to
+find the running service instance when initiating a ping.
 
-**01_Initial_Boot_Setup** and **02_First_Service** demonstrate how to get started with Spring Cloud Microservice Development. In a few simple steps we will see
-how easy it is to create a production ready Microservice in almost no time.
+Have a look into [Spring Cloud Ribbon](https://cloud.spring.io/spring-cloud-netflix/multi/multi_spring-cloud-ribbon.html) for further details.
 
-### Service Registry and Discovery
 
-**03_Service_Discovery** shows how to set up a service registry in Spring Boot and how to let services communicate with each other through this registry.
+`spring-boot-microservice-demo/todo-service/src/main/java/my/demo/springboot/microservice/todo/client/AccountConfiguration.java`
+```java
+public class AccountConfiguration {
+    @Autowired
+    IClientConfig ribbonClientConfig;
 
-### Hateoas Support
+    @Bean
+    public IPing ribbonPing(IClientConfig config) {
+        return new PingUrl();
+    }
 
-**04_Hateoas** makes a short excursion to the field of RESTful API design and how to create [mature](https://martinfowler.com/articles/richardsonMaturityModel.html)
-REST APIs.
+    @Bean
+    public IRule ribbonRule(IClientConfig config) {
+        return new RoundRobinRule();
+    }
+}
+```
 
-## Detail Description
+`spring-boot-microservice-demo/account-service/src/main/java/my/demo/springboot/microservice/account/api/AccountController.java`
+```java
+    @RequestMapping(value = "/")
+    public String home() {
+        return "OK";
+    }
+}
+```
 
-See [Detail Description](DETAIL-DESCRIPTION.md) for an in-depth explanation of the current features of this demo application.
+And finally we will adjust the service configuration file and tell the application to use Ribbon for a service with name **account**
+(which is specified in `spring-boot-microservice-demo/account-service/src/main/resources/application.yml`).
+
+Those are the settings we provide in the `application.yml` file of **todo-service**
+* UseIPAddrForServer - we want to use IP addresses to resolve host instances
+* DeploymentContextBasedVipAddresses - the name of the service whose instances we want to have resolved by Ribbon
+* ServerListRefreshInterval - the interval in which server lists should be refreshed
+* NIWSServerListClassName - get the server list from Eureka
+
+`spring-boot-microservice-demo/todo-service/src/main/resources/application.yml`
+```yaml
+eureka:
+  instance:
+    hostname: todo-service
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://${eureka.host:localhost}:${eureka.port:8761}/eureka/
+
+account:
+  ribbon:
+    UseIPAddrForServer: true
+    DeploymentContextBasedVipAddresses: account
+    ServerListRefreshInterval: 15000
+    NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
+```
+
+
+Then in the **AccountClient** we inject Spring Cloud's **LoadBalancerClient** which enables us to dynamically resolve hostnames by their
+name. Instead of choosing an instance of a service by ourselves like in the previous version of **AccountClient** Ribbon does this task for us now.
+Before using Ribbon we had to manually choose the instance of the service we wanted to access:
+
+```
+final ServiceInstance instance = discoveryClient.getInstances("account-service").get(0);
+```
+
+Also, we use a custom Error Handler for **RestTemplate** since we want to get notified whenever a client-side error occured within another service.
+
+`spring-boot-microservice-demo/todo-service/src/main/java/my/demo/springboot/microservice/todo/client/AccountClient.java`
+```java
+...
+
+@LoadBalanced
+@Bean
+RestTemplate restTemplate() {
+    return restTemplateBuilder.errorHandler(responseErrorHandler).build();
+}
+
+@Autowired
+RestTemplate restTemplate;
+
+@Autowired
+AccountClient(
+        final LoadBalancerClient loadBalancer, final RestTemplateBuilder restTemplateBuilder, final ClientResponseErrorHandler responseErrorHandler) {
+    this.loadBalancer=loadBalancer;
+    this.restTemplateBuilder=restTemplateBuilder;
+    this.responseErrorHandler=responseErrorHandler;
+}
+
+
+public URI getAccountUri(final UUID accountId) {
+
+    final ServiceInstance instance = loadBalancer.choose("account");
+    if (instance == null) {
+        return null;
+    }
+
+    log.info("Service called on host: {}, port: {}", instance.getHost(), instance.getPort());
+
+    return UriComponentsBuilder.fromHttpUrl( (instance.isSecure() ? "https://" : "http://") +
+            instance.getHost() + ":" + instance.getPort() + "/accounts/{id}")
+            .buildAndExpand(accountId).toUri();
+}
+```
 
 ## How-to run the app
 
