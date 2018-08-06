@@ -93,35 +93,74 @@ curl http://localhost:8081/accounts |json_pp
 will return
 
 ```json
-[
-   {
-      "id" : 1,
-      "email" : "John.Doe@foo.bar",
-      "lastName" : "Doe",
-      "firstName" : "John"
+{
+   "_embedded" : {
+      "accountResourceList" : [
+         {
+            "_links" : {
+               "accounts" : {
+                  "href" : "http://localhost:8081/accounts"
+               },
+               "self" : {
+                  "href" : "http://localhost:8081/accounts/4e696b86-257f-4887-8bae-027d8e883638"
+               }
+            },
+            "account" : {
+               "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
+               "firstName" : "John.Doe@foo.bar",
+               "lastName" : "Clean Dishes",
+               "email" : "false"
+            }
+         },
+         {
+            "account" : {
+               "email" : "false",
+               "lastName" : "Pay Bills",
+               "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
+               "firstName" : "Jane.Doe@foo.bar"
+            },
+            "_links" : {
+               "accounts" : {
+                  "href" : "http://localhost:8081/accounts"
+               },
+               "self" : {
+                  "href" : "http://localhost:8081/accounts/a52dc637-d932-4998-bb00-fe7f248319fb"
+               }
+            }
+         }
+      ]
    },
-   {
-      "email" : "Jane.Doe@foo.bar",
-      "id" : 2,
-      "lastName" : "Doe",
-      "firstName" : "Jane"
+   "_links" : {
+      "self" : {
+         "href" : "http://localhost:8081/accounts"
+      }
    }
-]
+}
 ```
 
 #### Get Account with specific Account id
 ```
-curl http://localhost:8081/accounts/1 |json_pp
+curl http://localhost:8081/accounts/4e696b86-257f-4887-8bae-027d8e883638 |json_pp
 ```
 
 will return
 
 ```json
 {
-   "id" : 1,
-   "lastName" : "Doe",
-   "firstName" : "John",
-   "email" : "John.Doe@foo.bar"
+   "account" : {
+      "lastName" : "Clean Dishes",
+      "email" : "false",
+      "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
+      "firstName" : "John.Doe@foo.bar"
+   },
+   "_links" : {
+      "self" : {
+         "href" : "http://localhost:8081/accounts/4e696b86-257f-4887-8bae-027d8e883638"
+      },
+      "accounts" : {
+         "href" : "http://localhost:8081/accounts"
+      }
+   }
 }
 ```
 ### Test Todo Service
@@ -134,71 +173,102 @@ curl http://localhost:8082/todos |json_pp
 will return
 
 ```json
-[
-   {
-      "description" : "Clean Dishes",
-      "completed" : false,
-      "accountId" : 1,
-      "email" : "John.Doe@foo.bar",
-      "id" : 1
+{
+   "_links" : {
+      "self" : {
+         "href" : "http://localhost:8082/todos"
+      }
    },
-   {
-      "accountId" : 1,
-      "email" : "John.Doe@foo.bar",
-      "id" : 2,
-      "description" : "Pay Bills",
-      "completed" : false
-   },
-   {
-      "description" : "Go Shopping",
-      "completed" : false,
-      "id" : 3,
-      "email" : "Jane.Doe@foo.bar",
-      "accountId" : 2
+   "_embedded" : {
+      "todoResourceList" : [
+         {
+            "_links" : {
+               "self" : {
+                  "href" : "http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+               }
+            },
+            "todo" : {
+               "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
+               "description" : "Clean Dishes",
+               "todoId" : "f85b1164-6bd6-4a74-9f01-d49d9802ff96",
+               "completed" : false,
+               "email" : "John.Doe@foo.bar"
+            }
+         },
+         {
+            "todo" : {
+               "description" : "Pay Bills",
+               "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
+               "todoId" : "d79bf376-fd65-418d-83f9-ee5dbf9fd331",
+               "completed" : false,
+               "email" : "Jane.Doe@foo.bar"
+            },
+            "_links" : {
+               "self" : {
+                  "href" : "http://localhost:8082/accounts/a52dc637-d932-4998-bb00-fe7f248319fb/todos"
+               }
+            }
+         }
+      ]
    }
+}
 ]
 ```
 #### Get Todos for a specific Account id
 ```
-curl http://localhost:8082/accounts/1/todos |json_pp
-```
-
-will return
-
-```json
-[
-   {
-      "email" : "John.Doe@foo.bar",
-      "completed" : false,
-      "description" : "Clean Dishes",
-      "accountId" : 1,
-      "id" : 1
-   },
-   {
-      "accountId" : 1,
-      "id" : 2,
-      "completed" : false,
-      "description" : "Pay Bills",
-      "email" : "John.Doe@foo.bar"
-   }
-]
-```
-#### Add a new Todo
-```
-curl -d '{"id":"3","accountId":"2","email":"Jane.Doe@foo.bar","description":"go to school","completed":"false"}' -H "Content-Type: application/json" -X POST http://localhost:8082/todos |json_pp
+curl http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos |json_pp
 ```
 
 will return
 
 ```json
 {
-   "accountId" : 2,
-   "email" : "Jane.Doe@foo.bar",
-   "id" : 3,
-   "completed" : false,
-   "description" : "go to school"
+   "_embedded" : {
+      "todoResourceList" : [
+         {
+            "_links" : {
+               "self" : {
+                  "href" : "http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+               }
+            },
+            "todo" : {
+               "todoId" : "f85b1164-6bd6-4a74-9f01-d49d9802ff96",
+               "completed" : false,
+               "email" : "John.Doe@foo.bar",
+               "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
+               "description" : "Clean Dishes"
+            }
+         }
+      ]
+   },
+   "_links" : {
+      "self" : {
+         "href" : "http://localhost:8082/todos"
+      }
+   }
 }
+```
+#### Add a new Todo
+```
+curl -d '{"accountId":"a52dc637-d932-4998-bb00-fe7f248319fb","email":"Jane.Doe@foo.bar","description":"invite friends","completed":"false"}' -H "Content-Type: application/json" -X POST http://localhost:8082/todos |json_pp
+```
 
+will return
+
+```json
+   "_links" : {
+      "self" : {
+         "href" : "http://localhost:8082/accounts/a52dc637-d932-4998-bb00-fe7f248319fb/todos"
+      }
+   },
+   "todo" : {
+      "description" : "invite friends",
+      "completed" : false,
+      "email" : "Jane.Doe@foo.bar",
+      "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
+      "todoId" : "ea2d5bac-891f-49c3-8f9c-ff09d9d5072e"
+   }
+}
 ```
 
 ## Service Enpoints and URLs
