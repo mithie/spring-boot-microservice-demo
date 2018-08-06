@@ -1,6 +1,7 @@
-# Spring Boot Microservice Demo 
 [![Build Status](https://travis-ci.com/mithie/spring-boot-microservice-demo.svg?branch=master)](https://travis-ci.com/mithie/spring-boot-microservice-demo)
 [![MIT License](https://img.shields.io/badge/license-MIT%20License-blue.svg)](https://github.com/mithie/spring-boot-microservice-demo/blob/master/LICENSE)
+
+# Spring Boot Microservice Demo 
 
 This project demonstrates the usage of Spring Boot and Spring Cloud for creating a simple cloud-native eco system.
 The concepts shown use several [Spring Boot starters](https://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#using-boot-starter) which facilitate the creation of Microservice based applications. The features included in this application scenario are outlined below.
