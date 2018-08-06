@@ -1,3 +1,8 @@
+# Table of Contents
+1. [Initial Boot Setup](#01_Initial_Boot_Setup)
+2. [First Service](#02_First_Service)
+3. [Service Discovery](#03_Service_Discovery)
+
 # 01_Initial_Boot_Setup
 
 Feature **01_Initial_Boot_Setup** just contains a simple project template that you will get when you create a
