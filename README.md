@@ -22,6 +22,7 @@ Currently the following branches can be checked out separately:
 * **02_First_Service**
 * **03_Service_Discovery**
 * **04_Hateoas**
+* **05_Eureka_And_Ribbon**
 
 Checkout a sub branch
 ```
@@ -45,6 +46,11 @@ how easy it is to create a production ready Microservice in almost no time.
 
 **04_Hateoas** makes a short excursion to the field of RESTful API design and how to create [mature](https://martinfowler.com/articles/richardsonMaturityModel.html)
 REST APIs.
+
+### Client-side load-balancing with Eureka and Ribbon
+
+**05_Eureka_And_Ribbon** goes one step further into a more advanced topic - client-side load-balancing - which we can use almost out-of-the-box with Spring Cloud's
+Ribbon starter project.
 
 ## Detail Description
 
