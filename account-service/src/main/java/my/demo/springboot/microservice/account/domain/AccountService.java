@@ -18,7 +18,7 @@ public class AccountService {
         final UUID accountOneId = UUID.fromString("4e696b86-257f-4887-8bae-027d8e883638");
         final UUID accountTwoId = UUID.fromString("a52dc637-d932-4998-bb00-fe7f248319fb");
 
-        final Stream<String> accountStream = Stream.of(accountOneId.toString() + ",John.Doe@foo.bar,Clean Dishes,false", accountTwoId.toString() + ",Jane.Doe@foo.bar,Pay Bills,false");
+        final Stream<String> accountStream = Stream.of(accountOneId.toString() + ",John,Doe,John.Doe@foo.bar", accountTwoId.toString() + ",Jane,Doe,Jane.Doe@foo.bar");
 
         AccountService.accountRepository = accountStream.map(account -> {
                 String[] info = account.split(",");

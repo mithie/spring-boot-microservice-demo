@@ -1,11 +1,24 @@
-server:
-  port: 8082
-
 spring:
   application:
     name: todo-service
 
 eureka:
+  instance:
+    hostname: todo-service
   client:
+    registerWithEureka: true
+    fetchRegistry: true
     serviceUrl:
       defaultZone: http://${eureka.host:localhost}:${eureka.port:8761}/eureka/
+
+account:
+  ribbon:
+    UseIPAddrForServer: true
+    DeploymentContextBasedVipAddresses: account
+    ServerListRefreshInterval: 15000
+    NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
+
+# Available log levels are: TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF
+logging:
+  level:
+    my.demo.springboot: DEBUG

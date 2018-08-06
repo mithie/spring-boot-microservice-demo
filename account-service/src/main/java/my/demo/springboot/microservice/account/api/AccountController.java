@@ -42,4 +42,9 @@ public class AccountController {
 
         return ResponseEntity.ok(accountResources);
     }
+
+    @RequestMapping(value = "/")
+    public String home() {
+        return "OK";
+    }
 }

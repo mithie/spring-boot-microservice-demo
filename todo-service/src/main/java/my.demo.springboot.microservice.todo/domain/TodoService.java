@@ -1,9 +1,5 @@
 package my.demo.springboot.microservice.todo.domain;
 
-import my.demo.springboot.microservice.todo.client.AccountClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +7,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Service
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import my.demo.springboot.microservice.todo.client.AccountClient;
+
+//@Service
+@Component
 public class TodoService {
 
     private Map<UUID, List<Todo>> todoRepository = null;
@@ -26,7 +28,8 @@ public class TodoService {
 
 
     public TodoService() {
-        final Stream<String> todoStream = Stream.of(accountOneId.toString() + ",John.Doe@foo.bar,Clean Dishes,false", accountTwoId.toString() + ",Jane.Doe@foo.bar,Pay Bills,false");
+        final Stream<String> todoStream = Stream.of(accountOneId.toString() + ",John.Doe@foo.bar,Clean Dishes,false",
+                accountTwoId.toString() + ",Jane.Doe@foo.bar,Pay Bills,false");
 
         todos = todoStream.map(todo -> {
             String[] info = todo.split(",");
@@ -38,7 +41,7 @@ public class TodoService {
 
     }
 
-    public List<Todo> findAllById(UUID accountId) {
+    public List<Todo> findAllById(final UUID accountId) {
         if(!accountClient.isAccountValid(accountId)) {
             throw new IllegalArgumentException(String.format("Account with id %s does not exist!", accountId));
         }
@@ -51,7 +54,7 @@ public class TodoService {
 
     public Todo addTodo(final Todo todo) {
 
-        Todo created = new Todo(UUID.randomUUID(), todo.getAccountId(), todo.getEmail(), todo.getDescription(), todo.isCompleted());
+        final Todo created = new Todo(UUID.randomUUID(), todo.getAccountId(), todo.getEmail(), todo.getDescription(), todo.isCompleted());
 
         List<Todo> todos = findAllById(created.getAccountId());
         if(todos==null) {
