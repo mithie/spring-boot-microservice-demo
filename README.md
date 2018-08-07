@@ -23,6 +23,7 @@ Currently the following branches can be checked out separately:
 * **03_Service_Discovery**
 * **04_Hateoas**
 * **05_Eureka_And_Ribbon**
+* **06_Feign_And_Hystrix**
 
 Checkout a sub branch
 ```
@@ -51,6 +52,10 @@ REST APIs.
 
 **05_Eureka_And_Ribbon** goes one step further into a more advanced topic - client-side load-balancing - which we can use almost out-of-the-box with Spring Cloud's
 Ribbon starter project.
+
+### Declarative Service Calls and Fallback behaviour with Feign and Hystrix
+
+**06_Feign_And_Hystrix** shows the use of declarative REST clients and how fallback mechanisms work when a service cannot be reached anymore. Also, testing of Feign with wiremock will be shown.
 
 ## Detail Description
 
