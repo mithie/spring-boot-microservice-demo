@@ -24,6 +24,7 @@ Currently the following branches can be checked out separately:
 * **04_Hateoas**
 * **05_Eureka_And_Ribbon**
 * **06_Feign_And_Hystrix**
+* **07_Integration_Testing**
 
 Checkout a sub branch
 ```
@@ -56,6 +57,10 @@ Ribbon starter project.
 ### Declarative Service Calls and Fallback behaviour with Feign and Hystrix
 
 **06_Feign_And_Hystrix** shows the use of declarative REST clients and how fallback mechanisms work when a service cannot be reached anymore. Also, testing of Feign with wiremock will be shown.
+
+### Integration testing of Spring Cloud Applications
+
+**07_Integration_Testing** shows a way how to realize a fully automated test setup for integration testing. This enables us to receive immediate feedback whether our application stack works as expected or not.
 
 ## Architecture
 
