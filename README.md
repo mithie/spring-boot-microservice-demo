@@ -81,7 +81,7 @@ There are many more possibilities why we might be lulled in a false sense of sec
 
 ### How does it work?
 
-There have been quite a couple of changes been made to the existing code base for this example, which should help making the code more maintainable and having a more concise separation of concerns.
+There have quite a couple of changes been made to the existing code base for this example, which should help making the code more maintainable and having a more concise separation of concerns.
 
 #### Adjusted Project Structure
 
