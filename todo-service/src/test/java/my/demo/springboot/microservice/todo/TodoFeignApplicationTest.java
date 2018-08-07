@@ -1,4 +1,4 @@
-package my.demo.springboot.microservice.todo.api;
+package my.demo.springboot.microservice.todo;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -66,7 +66,7 @@ public class TodoFeignApplicationTest {
                     .withHeader("Content-Type", "application/hal+json")
                     .withBodyFile("account.json")));
 
-        final ResponseEntity<Account> account = accountProxy.findById(testConfig.getAccountId());
+        ResponseEntity<Account> account = accountProxy.findById(testConfig.getAccountId());
 
         assertNotNull("should not be null", account);
         assertThat(account.getBody().getAccountId(), is(testConfig.getAccountId()));
@@ -84,7 +84,7 @@ public class TodoFeignApplicationTest {
         stubFor(get(urlEqualTo("/accounts/" + testConfig.getNonExistingAccountId()))
                 .willReturn(serverError()));
 
-        accountProxy.findById(testConfig.getNonExistingAccountId());
+        accountProxy.findById(testConfig.getNonExistingAccountId());;
     }
 
 
@@ -95,7 +95,7 @@ public class TodoFeignApplicationTest {
 
         @Bean
         public ServerList<Server> ribbonServerList() {
-            return new StaticServerList<>(new Server("localhost", TodoFeignApplicationTest.wiremock.port()));
+            return new StaticServerList<>(new Server("localhost", wiremock.port()));
         }
 
         public UUID getAccountId() {

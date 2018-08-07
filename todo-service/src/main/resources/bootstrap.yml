@@ -1,6 +1,6 @@
 spring:
   application:
-    name: account-service
+    name: todo-service
 
   # Available log levels are: TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF
   logging:
@@ -8,18 +8,3 @@ spring:
       console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([${springAppName:-},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}]){yellow} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
     level:
       my.demo.springboot: DEBUG
-
-server:
-  port: 9090
-
-eureka:
-  instance:
-    leaseRenewalIntervalInSeconds: 1
-    leaseExpirationDurationInSeconds: 2
-  client:
-    serviceUrl:
-      defaultZone: http://${eureka.host:localhost}:${eureka.port:8761}/eureka/
-
-ribbon:
-  eureka:
-    enabled: true

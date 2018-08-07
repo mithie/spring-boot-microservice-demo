@@ -1,6 +1,8 @@
 package my.demo.springboot.microservice.todo.domain;
 
 import lombok.*;
+import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.core.Relation;
 
 import java.util.UUID;
 
@@ -10,7 +12,8 @@ import java.util.UUID;
 @EqualsAndHashCode(exclude = "todoId")
 @ToString(exclude = "todoId")
 @RequiredArgsConstructor
-public class Todo {
+@Relation(collectionRelation="todos")
+public class Todo extends ResourceSupport {
     private UUID todoId;
 
     @NonNull

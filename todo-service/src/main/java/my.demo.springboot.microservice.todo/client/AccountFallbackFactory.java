@@ -1,8 +1,9 @@
 package my.demo.springboot.microservice.todo.client;
 
-import feign.hystrix.FallbackFactory;
-import my.demo.springboot.microservice.todo.TodoConfiguration;
-import my.demo.springboot.microservice.todo.domain.Todo;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,14 +11,14 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import feign.hystrix.FallbackFactory;
+import my.demo.springboot.microservice.todo.TodoConfiguration;
+import my.demo.springboot.microservice.todo.domain.Todo;
 
 @Component
 public class AccountFallbackFactory implements FallbackFactory<AccountProxy>{
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     TodoConfiguration todoConfiguration;
@@ -36,7 +37,7 @@ public class AccountFallbackFactory implements FallbackFactory<AccountProxy>{
                     if (localFakeCache().get(id) != null) {
                         return ResponseEntity.ok(new Account(id, null, null, null));
                     } else {
-                        throw new IllegalArgumentException(String.format("Account with Id %s not found in cache.", id));
+                        throw new IllegalArgumentException(String.format("Account with id %s not found in cache.", id));
                     }
                 }
                 throw new IllegalArgumentException(throwable);

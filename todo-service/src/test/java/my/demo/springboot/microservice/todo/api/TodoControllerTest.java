@@ -1,9 +1,18 @@
 package my.demo.springboot.microservice.todo.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import my.demo.springboot.microservice.todo.api.TodoController;
-import my.demo.springboot.microservice.todo.domain.Todo;
-import my.demo.springboot.microservice.todo.domain.TodoService;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,18 +25,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import my.demo.springboot.microservice.todo.domain.Todo;
+import my.demo.springboot.microservice.todo.domain.TodoServiceImpl;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(TodoController.class)
@@ -37,11 +38,11 @@ public class TodoControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private TodoService todoService;
+    private TodoServiceImpl todoService;
 
     private JacksonTester<Todo> insertTodo;
 
-    private List<Todo> todos = new ArrayList<>();
+    private final List<Todo> todos = new ArrayList<>();
 
     private final UUID accountOneId = UUID.randomUUID();
     private final UUID accountTwoId = UUID.randomUUID();
@@ -56,7 +57,7 @@ public class TodoControllerTest {
 
     @Test
     public void testGetTodoSuccess() throws Exception {
-        given(todoService.findAllById(accountOneId)).willReturn(todos);
+        given(todoService.findAllByAccount(accountOneId)).willReturn(todos);
 
         final ResultActions result = mockMvc.perform(get("/accounts/" + accountOneId +"/todos"));
         result.andExpect(status().is2xxSuccessful());
@@ -64,23 +65,24 @@ public class TodoControllerTest {
 
     @Test
     public void testGetTodoResponseEqualsAccountId2() throws Exception {
-        given(todoService.findAllById(accountOneId)).willReturn(todos);
+        given(todoService.findAllByAccount(accountOneId)).willReturn(todos);
 
         final ResultActions result = mockMvc.perform(get("/accounts/" + accountOneId +"/todos"));
 
         result.andExpect(status().isOk())
-                .andExpect(jsonPath("_embedded.todoResourceList[0].todo.todoId", is(todos.get(0).getTodoId().toString())))
-                .andExpect(jsonPath("_embedded.todoResourceList[0].todo.accountId", is(todos.get(0).getAccountId().toString())))
-                .andExpect(jsonPath("_embedded.todoResourceList[0].todo.email", is(todos.get(0).getEmail())))
-                .andExpect(jsonPath("_embedded.todoResourceList[0].todo.description", is(todos.get(0).getDescription())))
-                .andExpect(jsonPath("_embedded.todoResourceList[0].todo.completed", is(todos.get(0).isCompleted())))
-                .andExpect((jsonPath("_embedded.todoResourceList[0]._links.self.href", containsString("/accounts/" + accountOneId + "/todos"))));
+                .andExpect(jsonPath("_embedded.todos[0].todoId", is(todos.get(0).getTodoId().toString())))
+                .andExpect(jsonPath("_embedded.todos[0].accountId", is(todos.get(0).getAccountId().toString())))
+                .andExpect(jsonPath("_embedded.todos[0].email", is(todos.get(0).getEmail())))
+                .andExpect(jsonPath("_embedded.todos[0].description", is(todos.get(0).getDescription())))
+                .andExpect(jsonPath("_embedded.todos[0].completed", is(todos.get(0).isCompleted())))
+                .andExpect((jsonPath("_embedded.todos[0]._links.accountTodos.href", containsString("/accounts/" + accountOneId
+                        + "/todos"))));
     }
 
     @Test
     public void testPostTodoRequestForExistingAccount() throws Exception {
 
-        Todo newTodo = new Todo(UUID.randomUUID(), accountOneId,"John.Doe@foo.bar","Smoke Cigar",true);
+        final Todo newTodo = new Todo(UUID.randomUUID(), accountOneId,"John.Doe@foo.bar","Smoke Cigar",true);
         todos.add(newTodo);
 
         given(todoService.addTodo(newTodo)).willReturn(todos.get(2));
@@ -89,18 +91,18 @@ public class TodoControllerTest {
                 .content(insertTodo.write(newTodo).getJson()));
 
         result.andExpect(status().isCreated())
-                .andExpect(jsonPath("todo.todoId", is(todos.get(2).getTodoId().toString())))
-                .andExpect(jsonPath("todo.accountId", is(todos.get(2).getAccountId().toString())))
-                .andExpect(jsonPath("todo.email", is(todos.get(2).getEmail())))
-                .andExpect(jsonPath("todo.description", is(todos.get(2).getDescription())))
-                .andExpect(jsonPath("todo.completed", is(todos.get(2).isCompleted())))
-                .andExpect((jsonPath("_links.self.href", containsString("/accounts/" + accountOneId +"/todos"))));
+                .andExpect(jsonPath("todoId", is(todos.get(2).getTodoId().toString())))
+                .andExpect(jsonPath("accountId", is(todos.get(2).getAccountId().toString())))
+                .andExpect(jsonPath("email", is(todos.get(2).getEmail())))
+                .andExpect(jsonPath("description", is(todos.get(2).getDescription())))
+                .andExpect(jsonPath("completed", is(todos.get(2).isCompleted())))
+                .andExpect((jsonPath("_links.accountTodos.href", containsString("/accounts/" + accountOneId +"/todos"))));
 
-        given(todoService.findAllById(accountOneId)).willReturn(todos);
+        given(todoService.findAllByAccount(accountOneId)).willReturn(todos);
 
         final ResultActions requestResults = mockMvc.perform(get("/accounts/" + accountOneId + "/todos"));
 
         requestResults .andExpect(status().isOk())
-                .andExpect(jsonPath("_embedded.todoResourceList", hasSize(3)));
+                .andExpect(jsonPath("_embedded.todos", hasSize(3)));
     }
 }
