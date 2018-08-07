@@ -161,13 +161,13 @@ public class TodoApplicationIntegrationTest {
         startIfDown(Instance.ACCOUNT);
         assertNotNull(ServiceEnvironment.getInstance(Instance.ACCOUNT));
 
-        assertTrue(responseFromTodoService().contains("Account with id 4e696b86-257f-4887-8bae-027d8e883637 not found"));
+        assertTrue(errorResponseFromTodoService().contains("Account with id 4e696b86-257f-4887-8bae-027d8e883637 not found"));
     }
 
     ...
 
 
-    private String responseFromTodoService() {
+    private String errorResponseFromTodoService() {
         final String url = withUrl(ServiceEnvironment.TODO_SERVICE_PORT, INVALID_TODO_URL);
 
         String responseBody = null;
