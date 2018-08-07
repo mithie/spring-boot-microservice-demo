@@ -1,16 +1,24 @@
 package my.demo.springboot.microservice.todo;
 
-import my.demo.springboot.microservice.todo.client.AccountConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.netflix.ribbon.RibbonClient;
-
 import static org.springframework.boot.SpringApplication.run;
 
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Bean;
+
 @SpringBootApplication
-@EnableDiscoveryClient
-@RibbonClient(name = "account", configuration = AccountConfiguration.class)
+@EnableEurekaClient
+@EnableFeignClients
+@EnableCircuitBreaker
 public class TodoServiceApplication {
+
+    @Bean
+    TodoConfiguration todoConfiguration() {
+        return new TodoConfiguration();
+    }
+
     public static void main(final String[] args) {
         run(TodoServiceApplication.class, args);
     }

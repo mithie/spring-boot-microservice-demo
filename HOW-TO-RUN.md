@@ -36,7 +36,7 @@ mvn clean package
 
 #### Manual setup
 
-For testing purposes run each of the services manually in a custom shell. Since we want to test the load-balancing behavior of Ribbon
+For testing purposes run each of the services manually in a custom shell. Since we want to test the load-balancing and fallback behavior of Hystrix
 we will start two instances of account service running on different ports.
 
 `spring-boot-microservice-demo/eureka-service`
@@ -61,14 +61,14 @@ java -jar -Dserver.port=9090 target/todo-service-0.0.1-SNAPSHOT.jar
 
 ## Testing the application behavior
 
-Since we are now using Ribbon as client-side load balancer we can test different runtime scenarios of our application stack.
-We're especially interested in the application behavior when something happens to the Account Service in between its communication with Todo Service.
+Since we now have Feign, Hystrix and Sleuth on the run we can test different scenarios of our application stack.
+We're especially interested in the application behavior when something unexpected happens to the Account Service.
 
 Let's try and examine the following scenarios:
 
 1. Both Account Service instances are up and running. This means that Ribbon should consecutively call one of the two instances.
 2. One Account Service instance goes down. We want to be sure that Ribbon automatically chooses the only remaining instance.
-3. Both Account Service instances are down. This will return an exception, because we don't have any sort of fallback functionality at hand.
+3. Both Account Service instances are down. This means that our Fallback will be activated and try to ready relevant data from its internal cache. If that doesn't return a response either, an exception should be thrown.
 
 Ok, let's test each of those scenarios and begin with the first one:
 
@@ -83,44 +83,56 @@ curl http://localhost:9090/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos |
 When we open the shell where the **todo-service** is running we should see a log output similar to the following:
 
 ```
-NFLoadBalancer:name=account,current list of Servers=[10.159.144.117:8082, 10.159.144.117:8081],Load balancer stats=Zone stats: {defaultzone=[Zone:defaultzone;  Instance count:2;       Active connections count: 0;      Circuit breaker tripped count: 0;       Active connections per server: 0.0;]
-},Server stats: [[Server:10.159.144.117:8082;   Zone:defaultZone;       Total Requests:0;       Successive connection failure:0;        Total blackout seconds:0;       Last connection made:Thu Jan 01 01:00:00 CET 1970;        First connection made: Thu Jan 01 01:00:00 CET 1970;    Active Connections:0;   total failure count in last (1000) msecs:0;     average resp time:0.0;  90 percentile resp time:0.0;      95 percentile resp time:0.0;    min resp time:0.0;      max resp time:0.0;      stddev resp time:0.0]
-, [Server:10.159.144.117:8081;  Zone:defaultZone;       Total Requests:0;       Successive connection failure:0;        Total blackout seconds:0;       Last connection made:Thu Jan 01 01:00:00 CET 1970;        First connection made: Thu Jan 01 01:00:00 CET 1970;    Active Connections:0;   total failure count in last (1000) msecs:0;     average resp time:0.0;  90 percentile resp time:0.0;      95 percentile resp time:0.0;    min resp time:0.0;      max resp time:0.0;      stddev resp time:0.0]
-]}ServerList:DiscoveryEnabledNIWSServerList:; clientName:account; Effective vipAddresses:account; isSecure:false; datacenter:null
+2018-07-31 18:17:45.920  INFO [todo-service,d44f1d0b212f360e,d44f1d0b212f360e,false] 21034 --- [nio-9090-exec-9] m.d.s.m.todo.api.TodoController          : findAllByAccountId(4e696b86-257f-4887-8bae-027d8e883638)
+2018-07-31 18:17:45.920  INFO [todo-service,d44f1d0b212f360e,d44f1d0b212f360e,false] 21034 --- [nio-9090-exec-9] m.d.s.m.todo.client.AccountClient        : isAccountValid(4e696b86-257f-4887-8bae-027d8e883638)
+2018-07-31 18:17:45.920  INFO [todo-service,d44f1d0b212f360e,d44f1d0b212f360e,false] 21034 --- [nio-9090-exec-9] m.d.s.m.todo.client.AccountClient        : logAccess(): Service account-service called on host: 192.168.178.52, port: 8081
 
-2018-08-02 11:10:17.939  INFO 88681 --- [nio-9090-exec-1] tClient$$EnhancerBySpringCGLIB$$b5024786 : Service called on host: 10.159.144.117, port: 8081
-2018-08-02 11:10:28.021  INFO 88681 --- [nio-9090-exec-2] tClient$$EnhancerBySpringCGLIB$$b5024786 : Service called on host: 10.159.144.117, port: 8082
+2018-07-31 18:18:27.520  INFO [todo-service,a472b685c223982b,a472b685c223982b,false] 21034 --- [io-9090-exec-10] m.d.s.m.todo.api.TodoController          : findAllByAccountId(4e696b86-257f-4887-8bae-027d8e883638)
+2018-07-31 18:18:27.520  INFO [todo-service,a472b685c223982b,a472b685c223982b,false] 21034 --- [io-9090-exec-10] m.d.s.m.todo.client.AccountClient        : isAccountValid(4e696b86-257f-4887-8bae-027d8e883638)
+2018-07-31 18:18:27.521  INFO [todo-service,a472b685c223982b,a472b685c223982b,false] 21034 --- [io-9090-exec-10] m.d.s.m.todo.client.AccountClient        : logAccess(): Service account-service called on host: 192.168.178.52, port: 8082
 
 ```
 
-Notice that ribbon automatically switches between the service instances running on port 8081 and 8082 which is pretty cool since it shows us that the load balancing is working without having us spent too much effort on that item.
+Notice that ribbon automatically switches between the service instances running on port 8081 and 8082 which is pretty cool since it shows us that the load balancing is working without having us spent too much efforts on the item.
+Also, when we have a more detailed look at the log output we can see the Sleuth Trace Id which is automatically generated on the initial call to TodoController. If we look at the first log message we see that a unique Trace Id `d44f1d0b212f360e` has been created for this and all subsequent calls.
+If you look now into the shell of your Account Service which runs on port 8081 and search for this id you should see a log message like the one below telling you that this Trace Id is directly related to the call of the **findById** method of Account Service.
+This is really awesome since it dramatically facilitates debugging of your distributed application.
+
+```
+2018-07-31 18:17:45.928  INFO [account-service,d44f1d0b212f360e,a8c09001bec9716d,false] 21032 --- [nio-8081-exec-9] m.d.s.m.account.api.AccountController    : findById(4e696b86-257f-4887-8bae-027d8e883638)
+```
 
 
 ### 2. One-instance scenario
 
 Now let's try the next scenario. We will shutdown one of the two Account Service instances. As a result there shouldn't be any obvious changes visible to the consuming application since Ribbon will
-recognize in the background that there's only one service instance remaining. If you try out the same CURL request as in step 1 you will see that service calls are transparently handled by Ribbon
+recognize in the background that there's only one service available. If you try out the same CURL request as in 1. you will see that service calls are transparently handled by Ribbon. This behavior is also pretty cool since it guarantees our
+consuming services that the will always get a response as long as at least one service instance is running.
 
 ### 3. No-instance scenario
 
-Assuming there is currently no running instance of **account-service** available, how should our Todo Application react? The best of course would be if it still responds with a valid result. But since we didn't define a fallback behavior yet the call
-will just fail and respond with an error message.
+Assuming there is currently no running instance of Account Service available, how should our Todo Application react? The best of course would be if it still responds with a valid result. We have seen before how we can achieve such behavior
+with a Fallback defined in the Feign Service Client. Let's try it out now in real life.
 
-Let's try it out. First we will shut down the single remaining **account-service** instance and wait for a few seconds until the instance has been deregistered from Eureka. We then issue the same CURL command as we did before
+First we will shut down the single remaining **account-service** instance and wait for a few seconds until the instance has been deregistered from Eureka. We then issue the same CURL command as we did before
 and look at the log output of the **todo-service** instance.
 
+This should give us something like:
+
 ```
-{
-   "timestamp" : "2018-08-02T09:17:26.231+0000",
-   "status" : 500,
-   "message" : "URI is required",
-   "path" : "/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos",
-   "error" : "Internal Server Error"
-}
+2018-07-31 19:51:59.971  INFO [todo-service,ae601e361fe0e1db,ae601e361fe0e1db,false] 22151 --- [nio-9090-exec-2] m.d.s.m.todo.api.TodoController          : findAllByAccountId(4e696b86-257f-4887-8bae-027d8e883638)
+2018-07-31 19:51:59.971  INFO [todo-service,ae601e361fe0e1db,ae601e361fe0e1db,false] 22151 --- [nio-9090-exec-2] m.d.s.m.todo.client.AccountClient        : isAccountValid(4e696b86-257f-4887-8bae-027d8e883638)
+2018-07-31 19:51:59.971  WARN [todo-service,ae601e361fe0e1db,ae601e361fe0e1db,false] 22151 --- [nio-9090-exec-2] m.d.s.m.todo.client.AccountClient        : logAccess(): No services available!
+2018-07-31 19:51:59.974  WARN [todo-service,ae601e361fe0e1db,7cbde4390d899d78,false] 22151 --- [count-service-2] m.d.s.m.t.client.AccountFallbackFactory  : findById(4e696b86-257f-4887-8bae-027d8e883638)
 ```
 
-As we can see an HTTP 500 error is returned without any further information about the originating cause of the exception. This is probably the worst thing that could happen, because the consuming service is left alone with an exception it cannot handle.
-Fortunately we can do better and provide a more intuitive user experience by specifying a well-defined fallback behavior. **06_Feign_And_Hystrix** will extend this sample application and show a way to do just that.
+Great! Now we are still able to respond to **todo-service** even though no instance of **account-service** is running. The data simply is taken from the cache referenced from within our Fallback (of course a production like cache would not just be a simple HashMap!).
+If you look one more time at the log output you will again see the Trace Id generated by Sleuth guiding us all the way through the call stack of our service calls. This is a real great feature, because it facilitates debugging tremendously.
+
+There are still some other possible scenarios for testing, especially the ones which cause **todo-service** to respond with an exception to the consuming client. Think of what happens if no **account-service** instance is running and the Fallback
+also cannot find the requested data. Then **todo-service** should get back to the consumer with a reasonable error message.
+
+As you can see, performing manual integration tests can be quite cumbersome and time consuming. An option for automated integration testing will be introduced in branch **07_Integration_Testing**.
 
 ## Testing the endpoints
 
