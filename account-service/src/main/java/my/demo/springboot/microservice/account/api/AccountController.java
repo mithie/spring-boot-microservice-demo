@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resources;
@@ -20,11 +22,14 @@ import my.demo.springboot.microservice.account.domain.AccountService;
 @RestController
 public class AccountController {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     AccountService accountService;
 
     @RequestMapping(value = "/accounts/{id}", produces = "application/hal+json")
     public ResponseEntity<AccountResource> findById(@PathVariable final UUID id){
+        logger.info(String.format("findById(%s)", id));
         final Account a = accountService.findById(id);
 
         final AccountResource ar = new AccountResource(a);
@@ -33,6 +38,7 @@ public class AccountController {
 
     @RequestMapping(value="/accounts", produces = "application/hal+json")
     public ResponseEntity<Resources<AccountResource>> findAll(){
+        logger.info(String.format("findAll"));
         final List< AccountResource > accounts = accountService.findAll().stream().map(AccountResource::new).collect(
                 Collectors.toList());
         final Resources <AccountResource> accountResources = new Resources(accounts);
@@ -41,10 +47,5 @@ public class AccountController {
         accountResources.add(new Link(uriString, "self"));
 
         return ResponseEntity.ok(accountResources);
-    }
-
-    @RequestMapping(value = "/")
-    public String home() {
-        return "OK";
     }
 }

@@ -1,22 +1,11 @@
-info:
-  component: Eureka Server
-
 server:
   port: 8761
 
-management:
-  context-path: /admin
-
-endpoints:
-  info:
-    enabled: true
-  shutdown:
-    enabled: true
-  health:
-    enabled: true
-    sensitive: false
-
 eureka:
+  instance:
+    hostname: localhost
   client:
     registerWithEureka: false
     fetchRegistry: false
+  server:
+    enableSelfPreservation: false

@@ -1,4 +1,4 @@
-package my.demo.springboot.microservice.todo;
+package my.demo.springboot.microservice.todo.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import my.demo.springboot.microservice.todo.api.TodoController;
@@ -19,8 +19,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -33,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(TodoController.class)
-public class TodoServiceApplicationTests {
+public class TodoControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,34 +48,25 @@ public class TodoServiceApplicationTests {
 
     @Before
     public void setup() {
-
         JacksonTester.initFields(this, new ObjectMapper());
 
-        final Stream<String>
-                todoStream = Stream.of(accountOneId.toString() + ",John.Doe@foo.bar,Clean Dishes,false", accountTwoId + ",John.Doe@foo.bar,Pay Bills,false");
-
-        todos = todoStream.map(todo -> {
-            String[] info = todo.split(",");
-            return new Todo(UUID.randomUUID(), UUID.fromString(info[0]), info[1], info[2], Boolean.getBoolean(info[3]));
-        }).collect(Collectors.toCollection(ArrayList::new));
-
+        todos.add(new Todo(UUID.randomUUID(), accountOneId, "John.Doe@foo.bar", "Clean Dishes", false));
+        todos.add(new Todo(UUID.randomUUID(), accountTwoId, "John.Doe@foo.bar", "Pay Bills", false));
     }
 
     @Test
     public void testGetTodoSuccess() throws Exception {
-
         given(todoService.findAllById(accountOneId)).willReturn(todos);
 
-        final ResultActions result = mockMvc.perform(get("/accounts/" +accountOneId +"/todos"));
+        final ResultActions result = mockMvc.perform(get("/accounts/" + accountOneId +"/todos"));
         result.andExpect(status().is2xxSuccessful());
     }
 
     @Test
     public void testGetTodoResponseEqualsAccountId2() throws Exception {
-
         given(todoService.findAllById(accountOneId)).willReturn(todos);
 
-        final ResultActions result = mockMvc.perform(get("/accounts/"+accountOneId +"/todos"));
+        final ResultActions result = mockMvc.perform(get("/accounts/" + accountOneId +"/todos"));
 
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("_embedded.todoResourceList[0].todo.todoId", is(todos.get(0).getTodoId().toString())))
