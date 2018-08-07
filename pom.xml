@@ -35,6 +35,19 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+
+			<dependency>
+				<groupId>my.demo.springboot.microservice.api</groupId>
+				<artifactId>todo-api</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.awaitility</groupId>
+				<artifactId>awaitility</artifactId>
+				<version>3.1.2</version>
+				<scope>test</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -66,9 +79,11 @@
 	</repositories>
 
 	<modules>
+		<module>todo-api</module>
+		<module>eureka-service</module>
 		<module>account-service</module>
 		<module>todo-service</module>
-        <module>eureka-service</module>
-    </modules>
+		<module>todo-integrationtest</module>
+	</modules>
 	
 </project>

@@ -19,25 +19,27 @@ mvn clean package
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary:
 [INFO]
-[INFO] spring-boot-microservice-demo ...................... SUCCESS [  0.203 s]
-[INFO] account-service .................................... SUCCESS [  9.291 s]
-[INFO] todo-service ....................................... SUCCESS [  0.825 s]
-[INFO] eureka-service ..................................... SUCCESS [  0.308 s]
+[INFO] spring-boot-microservice-demo ...................... SUCCESS [  0.244 s]
+[INFO] todo-api ........................................... SUCCESS [  2.791 s]
+[INFO] eureka-service ..................................... SUCCESS [  1.607 s]
+[INFO] account-service .................................... SUCCESS [  7.532 s]
+[INFO] todo-service ....................................... SUCCESS [ 19.473 s]
+[INFO] todo-integrationtest ............................... SUCCESS [  0.304 s]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 11.383 s
-[INFO] Finished at: 2018-06-25T17:19:33+02:00
-[INFO] Final Memory: 58M/514M
+[INFO] Total time: 33.416 s
+[INFO] Finished at: 2018-08-06T15:47:32+02:00
+[INFO] Final Memory: 74M/806M
 [INFO] ------------------------------------------------------------------------
+
 
 ```
 
 
 #### Manual setup
 
-For testing purposes run each of the services manually in a custom shell. Since we want to test the load-balancing and fallback behavior of Hystrix
-we will start two instances of account service running on different ports.
+For testing purposes run each of the services manually in a custom shell.
 
 `spring-boot-microservice-demo/eureka-service`
 ```
@@ -59,7 +61,7 @@ java -jar -Dserver.port=8082 target/account-service-0.0.1-SNAPSHOT.jar
 java -jar -Dserver.port=9090 target/todo-service-0.0.1-SNAPSHOT.jar
 ```
 
-## Testing the application behavior
+## Testing load-balancing and fallback behavior
 
 Since we now have Feign, Hystrix and Sleuth on the run we can test different scenarios of our application stack.
 We're especially interested in the application behavior when something unexpected happens to the Account Service.
@@ -150,31 +152,30 @@ will return
 
 ```json
 {
+   "_links" : {
+      "self" : {
+         "href" : "http://localhost:8081/accounts"
+      }
+   },
    "_embedded" : {
       "accountResourceList" : [
          {
             "_links" : {
-               "accounts" : {
-                  "href" : "http://localhost:8081/accounts"
-               },
                "self" : {
                   "href" : "http://localhost:8081/accounts/4e696b86-257f-4887-8bae-027d8e883638"
+               },
+               "accounts" : {
+                  "href" : "http://localhost:8081/accounts"
                }
             },
             "account" : {
+               "lastName" : "Doe",
                "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
-               "firstName" : "John.Doe@foo.bar",
-               "lastName" : "Clean Dishes",
-               "email" : "false"
+               "firstName" : "John",
+               "email" : "John.Doe@foo.bar"
             }
          },
          {
-            "account" : {
-               "email" : "false",
-               "lastName" : "Pay Bills",
-               "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
-               "firstName" : "Jane.Doe@foo.bar"
-            },
             "_links" : {
                "accounts" : {
                   "href" : "http://localhost:8081/accounts"
@@ -182,14 +183,15 @@ will return
                "self" : {
                   "href" : "http://localhost:8081/accounts/a52dc637-d932-4998-bb00-fe7f248319fb"
                }
+            },
+            "account" : {
+               "lastName" : "Doe",
+               "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
+               "email" : "Jane.Doe@foo.bar",
+               "firstName" : "Jane"
             }
          }
       ]
-   },
-   "_links" : {
-      "self" : {
-         "href" : "http://localhost:8081/accounts"
-      }
    }
 }
 ```
@@ -203,19 +205,19 @@ will return
 
 ```json
 {
-   "account" : {
-      "lastName" : "Clean Dishes",
-      "email" : "false",
-      "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
-      "firstName" : "John.Doe@foo.bar"
-   },
    "_links" : {
-      "self" : {
-         "href" : "http://localhost:8081/accounts/4e696b86-257f-4887-8bae-027d8e883638"
-      },
       "accounts" : {
          "href" : "http://localhost:8081/accounts"
+      },
+      "self" : {
+         "href" : "http://localhost:8081/accounts/4e696b86-257f-4887-8bae-027d8e883638"
       }
+   },
+   "account" : {
+      "email" : "John.Doe@foo.bar",
+      "lastName" : "Doe",
+      "firstName" : "John",
+      "accountId" : "4e696b86-257f-4887-8bae-027d8e883638"
    }
 }
 ```
@@ -230,45 +232,65 @@ will return
 
 ```json
 {
-   "_links" : {
-      "self" : {
-         "href" : "http://localhost:8082/todos"
-      }
-   },
    "_embedded" : {
-      "todoResourceList" : [
+      "todos" : [
          {
+            "completed" : false,
             "_links" : {
                "self" : {
-                  "href" : "http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+                  "href" : "http://localhost:9090/todos/662d0c82-507d-444f-ab70-4b9338959645"
+               },
+               "accountTodos" : {
+                  "href" : "http://localhost:9090/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+               },
+               "todos" : {
+                  "href" : "http://localhost:9090/todos"
                }
             },
-            "todo" : {
-               "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
-               "description" : "Clean Dishes",
-               "todoId" : "f85b1164-6bd6-4a74-9f01-d49d9802ff96",
-               "completed" : false,
-               "email" : "John.Doe@foo.bar"
-            }
+            "todoId" : "662d0c82-507d-444f-ab70-4b9338959645",
+            "description" : "Clean Dishes",
+            "email" : "John.Doe@foo.bar",
+            "accountId" : "4e696b86-257f-4887-8bae-027d8e883638"
          },
          {
-            "todo" : {
-               "description" : "Pay Bills",
-               "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
-               "todoId" : "d79bf376-fd65-418d-83f9-ee5dbf9fd331",
-               "completed" : false,
-               "email" : "Jane.Doe@foo.bar"
+            "description" : "Watch NBA",
+            "email" : "John.Doe@foo.bar",
+            "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
+            "completed" : false,
+            "_links" : {
+               "todos" : {
+                  "href" : "http://localhost:9090/todos"
+               },
+               "self" : {
+                  "href" : "http://localhost:9090/todos/8f6bb6bc-7f17-4cb1-9735-1e913220bcc1"
+               },
+               "accountTodos" : {
+                  "href" : "http://localhost:9090/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+               }
             },
+            "todoId" : "8f6bb6bc-7f17-4cb1-9735-1e913220bcc1"
+         },
+         {
+            "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
+            "email" : "Jane.Doe@foo.bar",
+            "description" : "Pay Bills",
+            "todoId" : "b7e5354a-8348-4f0b-86f1-c982c541e3e3",
             "_links" : {
                "self" : {
-                  "href" : "http://localhost:8082/accounts/a52dc637-d932-4998-bb00-fe7f248319fb/todos"
+                  "href" : "http://localhost:9090/todos/b7e5354a-8348-4f0b-86f1-c982c541e3e3"
+               },
+               "accountTodos" : {
+                  "href" : "http://localhost:9090/accounts/a52dc637-d932-4998-bb00-fe7f248319fb/todos"
+               },
+               "todos" : {
+                  "href" : "http://localhost:9090/todos"
                }
-            }
+            },
+            "completed" : false
          }
       ]
    }
 }
-]
 ```
 #### Get Todos for a specific Account id
 ```
@@ -280,27 +302,44 @@ will return
 ```json
 {
    "_embedded" : {
-      "todoResourceList" : [
+      "todos" : [
          {
+            "description" : "Clean Dishes",
+            "completed" : false,
             "_links" : {
+               "todos" : {
+                  "href" : "http://localhost:9090/todos"
+               },
                "self" : {
-                  "href" : "http://localhost:8082/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+                  "href" : "http://localhost:9090/todos/662d0c82-507d-444f-ab70-4b9338959645"
+               },
+               "accountTodos" : {
+                  "href" : "http://localhost:9090/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
                }
             },
-            "todo" : {
-               "todoId" : "f85b1164-6bd6-4a74-9f01-d49d9802ff96",
-               "completed" : false,
-               "email" : "John.Doe@foo.bar",
-               "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
-               "description" : "Clean Dishes"
-            }
+            "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
+            "email" : "John.Doe@foo.bar",
+            "todoId" : "662d0c82-507d-444f-ab70-4b9338959645"
+         },
+         {
+            "completed" : false,
+            "description" : "Watch NBA",
+            "_links" : {
+               "accountTodos" : {
+                  "href" : "http://localhost:9090/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos"
+               },
+               "self" : {
+                  "href" : "http://localhost:9090/todos/8f6bb6bc-7f17-4cb1-9735-1e913220bcc1"
+               },
+               "todos" : {
+                  "href" : "http://localhost:9090/todos"
+               }
+            },
+            "email" : "John.Doe@foo.bar",
+            "accountId" : "4e696b86-257f-4887-8bae-027d8e883638",
+            "todoId" : "8f6bb6bc-7f17-4cb1-9735-1e913220bcc1"
          }
       ]
-   },
-   "_links" : {
-      "self" : {
-         "href" : "http://localhost:8082/todos"
-      }
    }
 }
 ```
@@ -312,18 +351,23 @@ curl -d '{"accountId":"a52dc637-d932-4998-bb00-fe7f248319fb","email":"Jane.Doe@f
 will return
 
 ```json
+{
    "_links" : {
+      "accountTodos" : {
+         "href" : "http://localhost:9090/accounts/a52dc637-d932-4998-bb00-fe7f248319fb/todos"
+      },
+      "todos" : {
+         "href" : "http://localhost:9090/todos"
+      },
       "self" : {
-         "href" : "http://localhost:8082/accounts/a52dc637-d932-4998-bb00-fe7f248319fb/todos"
+         "href" : "http://localhost:9090/todos/423d933d-638e-406a-b07f-a4c40ea25fbc"
       }
    },
-   "todo" : {
-      "description" : "invite friends",
-      "completed" : false,
-      "email" : "Jane.Doe@foo.bar",
-      "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
-      "todoId" : "ea2d5bac-891f-49c3-8f9c-ff09d9d5072e"
-   }
+   "email" : "Jane.Doe@foo.bar",
+   "completed" : false,
+   "accountId" : "a52dc637-d932-4998-bb00-fe7f248319fb",
+   "todoId" : "423d933d-638e-406a-b07f-a4c40ea25fbc",
+   "description" : "invite friends"
 }
 ```
 

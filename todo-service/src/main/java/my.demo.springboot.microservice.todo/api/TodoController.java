@@ -1,23 +1,26 @@
 package my.demo.springboot.microservice.todo.api;
 
-import my.demo.springboot.microservice.todo.domain.Todo;
-import my.demo.springboot.microservice.todo.domain.TodoResource;
-import my.demo.springboot.microservice.todo.domain.TodoService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import static org.springframework.hateoas.core.DummyInvocationUtils.methodOn;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resources;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import my.demo.springboot.microservice.todo.domain.Todo;
+import my.demo.springboot.microservice.todo.domain.TodoServiceImpl;
 
 @RestController
 public class TodoController {
@@ -25,42 +28,63 @@ public class TodoController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    private TodoService todoService;
+    private TodoServiceImpl todoServiceImpl;
 
-
-    @RequestMapping(path = "/todos", method = RequestMethod.GET, produces = "application/hal+json")
-    public ResponseEntity<Resources<TodoResource>> findAll(){
+    @GetMapping(path = "/todos", produces = "application/hal+json")
+    public ResponseEntity<Resources<Todo>> findAll(){
         logger.info("findAll()");
-        List<Todo> todos = todoService.findAll();
-        return ResponseEntity.ok(todoResources(todos));
-    }
 
-    @RequestMapping(path = "/accounts/{accountid}/todos", method = RequestMethod.GET, produces = "application/hal+json")
-    public ResponseEntity<Resources<TodoResource>> findAllByAccountId(@PathVariable("accountid") UUID accountId){
-        logger.info(String.format("findAllByAccountId(%s)", accountId));
-
-        List<Todo> todos = todoService.findAllById(accountId);
+        List<Todo> todos = todoServiceImpl.findAll();
 
         return ResponseEntity.ok(todoResources(todos));
     }
 
-    @RequestMapping(path = "/todos", method = RequestMethod.POST, produces = "application/hal+json")
-    public ResponseEntity<TodoResource> addTodo(@RequestBody final Todo todo){
+    @GetMapping(path = "/todos/{id}", produces = "application/hal+json")
+    public ResponseEntity<Todo> findById(@PathVariable("id") UUID todoId){
+        logger.info(String.format("findById(%s)", todoId));
+
+        Todo todo = todoServiceImpl.findById(todoId);
+
+        return ResponseEntity.ok(todo);
+    }
+
+    @GetMapping(path = "/accounts/{accountid}/todos", produces = "application/hal+json")
+    public ResponseEntity<Resources<Todo>> findAllByAccount(@PathVariable("accountid") UUID accountId){
+        logger.info(String.format("findAllByAccount(%s)", accountId));
+
+        List<Todo> todos = todoServiceImpl.findAllByAccount(accountId);
+
+        return ResponseEntity.ok(todoResources(todos));
+    }
+
+    @PostMapping(path = "/todos")
+    public ResponseEntity<Todo> addTodo(@RequestBody final Todo todo){
         logger.info(String.format("addTodo(%s)", todo));
 
-        Todo result = todoService.addTodo(todo);
+        Todo result = todoServiceImpl.addTodo(todo);
 
         final URI uri = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
-        return ResponseEntity.created(uri).body(new TodoResource(result));
+
+        addLinkToSingleElement(result);
+
+        return ResponseEntity.created(uri).body(result);
     }
 
-    private Resources<TodoResource> todoResources(List<Todo> todos) {
-        final List<TodoResource> todoResources = todos.stream().map(TodoResource::new).collect(Collectors.toList());
+    private Resources<Todo> todoResources(List<Todo> todos) {
+        addLinkToList(todos);
+        return new Resources(todos);
+    }
 
-        final Resources<TodoResource> resources = new Resources(todoResources);
+    private void addLinkToList(List<Todo> todos) {
+            todos.forEach(t-> { addLinkToSingleElement(t);
+        });
+    }
 
-        resources.add(linkTo(methodOn(TodoController.class).findAll()).withSelfRel());
-
-        return resources;
+    private void addLinkToSingleElement(Todo todo) {
+        if(!todo.hasLink("self")) {
+            todo.add(linkTo(ControllerLinkBuilder.methodOn(TodoController.class).findById(todo.getTodoId())).withSelfRel());
+            todo.add(linkTo(ControllerLinkBuilder.methodOn(TodoController.class).findAllByAccount(todo.getAccountId())).withRel("accountTodos"));
+            todo.add(linkTo(ControllerLinkBuilder.methodOn(TodoController.class).findAll()).withRel("todos"));
+        }
     }
 }

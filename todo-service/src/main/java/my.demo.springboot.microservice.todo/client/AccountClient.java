@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +35,7 @@ public class AccountClient {
         if(instance != null) {
             logger.info("logAccess(): Service {} called on host: {}, port: {}", instance.getServiceId(), instance.getHost(), instance.getPort());
         } else {
-            logger.warn("logAccess(): No services available!");
+            logger.error("logAccess(): No services available!");
         }
     }
 }
