@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import my.demo.springboot.microservice.todo.domain.Todo;
-import my.demo.springboot.microservice.todo.domain.TodoServiceImpl;
+import my.demo.springboot.microservice.todo.domain.TodoService;
 
 @RestController
 public class TodoController {
@@ -28,13 +28,13 @@ public class TodoController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    private TodoServiceImpl todoServiceImpl;
+    private TodoService todoService;
 
     @GetMapping(path = "/todos", produces = "application/hal+json")
     public ResponseEntity<Resources<Todo>> findAll(){
         logger.info("findAll()");
 
-        List<Todo> todos = todoServiceImpl.findAll();
+        List<Todo> todos = todoService.findAll();
 
         return ResponseEntity.ok(todoResources(todos));
     }
@@ -43,7 +43,7 @@ public class TodoController {
     public ResponseEntity<Todo> findById(@PathVariable("id") UUID todoId){
         logger.info(String.format("findById(%s)", todoId));
 
-        Todo todo = todoServiceImpl.findById(todoId);
+        Todo todo = todoService.findById(todoId);
 
         return ResponseEntity.ok(todo);
     }
@@ -52,7 +52,7 @@ public class TodoController {
     public ResponseEntity<Resources<Todo>> findAllByAccount(@PathVariable("accountid") UUID accountId){
         logger.info(String.format("findAllByAccount(%s)", accountId));
 
-        List<Todo> todos = todoServiceImpl.findAllByAccount(accountId);
+        List<Todo> todos = todoService.findAllByAccount(accountId);
 
         return ResponseEntity.ok(todoResources(todos));
     }
@@ -61,7 +61,7 @@ public class TodoController {
     public ResponseEntity<Todo> addTodo(@RequestBody final Todo todo){
         logger.info(String.format("addTodo(%s)", todo));
 
-        Todo result = todoServiceImpl.addTodo(todo);
+        Todo result = todoService.addTodo(todo);
 
         final URI uri = ServletUriComponentsBuilder.fromCurrentRequest().build().toUri();
 

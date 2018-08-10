@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 import org.springframework.context.annotation.Configuration;
 
 import my.demo.springboot.microservice.account.domain.Account;
-import my.demo.springboot.microservice.account.domain.AccountService;
 
 @Configuration
 public class AccountConfiguration {
