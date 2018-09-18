@@ -1,12 +1,7 @@
 package my.demo.springboot.microservice.account;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
-
-import java.util.UUID;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import my.demo.springboot.microservice.account.domain.Account;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,11 +11,17 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 
-import my.demo.springboot.microservice.account.domain.Account;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
@@ -44,39 +45,29 @@ public class AccountServiceApplicationTests {
         JacksonTester.initFields(this, objectMapper);
 
         mockMvc = webAppContextSetup(webApplicationContext).build();
-	    account = new Account("John", "Doe", "John.Doe@foo.bar");
+	    account = new Account("John", "Doe", "john.doe@foo.com");
 	}
 
 	@Test
 	public void testPostAccountSuccess() throws Exception {
-		mockMvc.perform(post("/accounts")
-                .contentType("application/hal+json")
-                //.accept("application/hal+json")
-                .content(jacksonTester.write(account).getJson())
-        ).andExpect(status().isCreated());
+		mockMvc.perform(post("/accounts").contentType("application/hal+json")
+                .content(jacksonTester.write(account).getJson())).andExpect(status().isCreated());
 	}
 
 	@Test
 	public void testDeleteAccountDenied() throws Exception {
-		mockMvc.perform(delete("/accounts/"+accountOneId)
-				//.contentType("application/hal+json")
-				//.content(jacksonTester.write(account).getJson())
-		).andExpect(status().is(405));
+		mockMvc.perform(delete("/accounts/"+accountOneId).
+				contentType("application/hal+json")).andExpect(status().is(405));
 	}
-	/*
+
 	@Test
 	public void testGetAccountResponseEqualsSample() throws Exception {
 
-		given(accountService.findById(accountOneId)).willReturn(account);
-
 		final ResultActions result = mockMvc.perform(get("/accounts/"+accountOneId));
 
-		result.andExpect(jsonPath("account.accountId", is(account.getAccountId().toString())))
-				.andExpect(jsonPath("account.firstName", is(account.getFirstName())))
-				.andExpect(jsonPath("account.lastName", is(account.getLastName())))
-				.andExpect(jsonPath("account.email", is(account.getEmail())))
-				.andExpect((jsonPath("_links.accounts.href", containsString("accounts"))))
+		result.andExpect(jsonPath("firstName", is(account.getFirstName())))
+				.andExpect(jsonPath("lastName", is(account.getLastName())))
+				.andExpect(jsonPath("email", is(account.getEmail())))
 				.andExpect((jsonPath("_links.self.href", containsString("accounts/" + accountOneId))));
 	}
-    */
 }

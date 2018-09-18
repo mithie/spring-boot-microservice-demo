@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Service
-public class TodoServiceImpl implements TodoService {
+//@Service
+public class TodoServiceImpl /* implements TodoService */{
 
     @Autowired
     private AccountClient accountClient;
@@ -23,14 +23,18 @@ public class TodoServiceImpl implements TodoService {
     @Autowired
     TodoConfiguration todoConfiguration;
 
+    /*
     public Todo findById(UUID todoId) {
         return todoConfiguration.todoRepository().entrySet().stream()
                 .flatMap(l -> l.getValue().stream().filter(t->t.getTodoId().equals(todoId))).collect(Collectors.toList()).get(0);
     }
+    */
 
+    /*
     public List<Todo> findAll() {
         return todoConfiguration.todoRepository().entrySet().stream().flatMap(l -> l.getValue().stream()).collect(Collectors.toList());
     }
+    */
 
     public List<Todo> findAllByAccount(UUID accountId) {
         if (!accountClient.isAccountValid(accountId)) {

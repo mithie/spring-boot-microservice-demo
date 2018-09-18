@@ -40,14 +40,6 @@ public class AccountApplicationConfiguration {
         factory.setPackagesToScan("my.demo.springboot.microservice.account.domain");
         factory.setDataSource(dataSource());
 
-        /*
-        Map<String, Object> props = factory.getJpaPropertyMap();
-        props.put("hibernate.hbm2ddl.auto", "create-drop");
-        props.put("hibernate.show_sql", "true");
-
-        factory.setJpaPropertyMap(props);
-        */
-
         return factory;
     }
 
