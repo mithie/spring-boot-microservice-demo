@@ -1,2 +1,0 @@
-INSERT INTO account (accountid, firstname, lastname, email) VALUES ('4e696b86257f48878bae027d8e883638', 'John', 'Doe', 'john.doe@foo.com');
-INSERT INTO account (accountid, firstname, lastname, email) VALUES ('a52dc637d9324998bb00fe7f248319fb', 'Jane', 'Doe', 'jane.doe@bar.com');
