@@ -79,7 +79,6 @@
 	</repositories>
 
 	<modules>
-		<module>todo-api</module>
 		<module>eureka-service</module>
 		<module>account-service</module>
 		<module>todo-service</module>

@@ -1,4 +1,4 @@
-package my.demo.springboot.microservice.todo.api;
+package my.demo.springboot.microservice.todo;
 
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.context.ApplicationContext;

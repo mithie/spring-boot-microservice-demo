@@ -1,4 +1,4 @@
-package my.demo.springboot.microservice.todo.api;
+package my.demo.springboot.microservice.todo;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

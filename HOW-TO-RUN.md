@@ -379,7 +379,7 @@ Account Service | http://localhost:8081/accounts | GET | shows all existing acco
 Account Service | http://localhost:8082/accounts | GET | -
 Account Service | http://localhost:8081/accounts/{id} | GET | shows all accounts for a specific account id
 Account Service | http://localhost:8082/accounts/{id} | GET | -
-Todo Service | http://localhost:9090/todos | GET | shows all existing todos
+Todo Service | http://localhost:9090/todo | GET | shows all existing todos
 Todo Service | http://localhost:9090/todos | POST | endpoint for adding a new todo
 Todo Service | http://localhost:9090/accounts/{accountid}/todos | GET | shows all todos for a specific account id
 Eureka Dashboard | http://localhost:8761 | GET | show the Eureka dashboard

@@ -26,7 +26,7 @@ public class SpringBootServiceWrapper {
     private final int port;
 
     public static final long MAX_ENDPOINT_STARTUP_TIME = 60L;
-    public static final long MAX_ENDPOINT_SHUTDOWN_TIME = 15L;
+    public static final long MAX_ENDPOINT_SHUTDOWN_TIME = 25L;
     public static final long MAX_ENDPOINT_DEREG_TIME = 60L;
 
     public SpringBootServiceWrapper(final String serviceName, final String version, final int port) {
@@ -36,7 +36,7 @@ public class SpringBootServiceWrapper {
     }
 
     public void startService() {
-        final List<String> arguments = Lists.newArrayList("java", "-jar", executable(serviceName, version));
+        final List<String> arguments = Lists.newArrayList("java", "-jar", "-Dserver.port="+port, executable(serviceName, version));
         arguments.addAll(defaultArgs);
 
         final ProcessBuilder processBuilder = new ProcessBuilder(arguments);

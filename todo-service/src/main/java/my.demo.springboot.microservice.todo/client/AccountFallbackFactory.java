@@ -1,9 +1,8 @@
 package my.demo.springboot.microservice.todo.client;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
+import feign.hystrix.FallbackFactory;
+import my.demo.springboot.microservice.todo.TodoConfiguration;
+import my.demo.springboot.microservice.todo.domain.Todo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +10,9 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import feign.hystrix.FallbackFactory;
-import my.demo.springboot.microservice.todo.TodoConfiguration;
-import my.demo.springboot.microservice.todo.domain.Todo;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class AccountFallbackFactory implements FallbackFactory<AccountProxy>{

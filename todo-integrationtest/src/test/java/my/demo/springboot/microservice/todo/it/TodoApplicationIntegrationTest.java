@@ -1,17 +1,7 @@
 package my.demo.springboot.microservice.todo.it;
 
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
+import my.demo.springboot.microservice.todo.it.domain.Todo;
+import my.demo.springboot.microservice.todo.it.domain.TodoResources;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -23,18 +13,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import my.demo.springboot.microservice.todo.domain.Todo;
-import my.demo.springboot.microservice.todo.domain.TodoResources;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.*;
+
 
 public class TodoApplicationIntegrationTest {
 
     RestTemplate restTemplate = RestTemplateBuilder.restTemplate();
 
-    private final String VALID_TODO_URL="/accounts/4e696b86-257f-4887-8bae-027d8e883638/todos";
-    private final String INVALID_TODO_URL="/accounts/4e696b86-257f-4887-8bae-027d8e883637/todos";
+    private final String VALID_TODO_URL="/todos/search/accounts?accountId=4e696b86-257f-4887-8bae-027d8e883638";
+    private final String INVALID_TODO_URL="/todos/search/accounts?accountId=4e696b86-257f-4887-8bae-027d8e883637";
 
-    private final Todo expectedOne = new Todo(UUID.fromString("4e696b86-257f-4887-8bae-027d8e883638"), "John.Doe@foo.bar", "Clean Dishes", false);
-    private final Todo expectedTwo = new Todo(UUID.fromString("4e696b86-257f-4887-8bae-027d8e883638"), "John.Doe@foo.bar", "Watch NBA", false);
+    private final Todo expectedOne = new Todo(UUID.fromString("4e696b86-257f-4887-8bae-027d8e883638"), "john.doe@foo.com", "clean dishes", false);
+    private final Todo expectedTwo = new Todo(UUID.fromString("4e696b86-257f-4887-8bae-027d8e883638"), "john.doe@foo.com", "watch nba", false);
 
 
     @BeforeClass
@@ -57,6 +54,7 @@ public class TodoApplicationIntegrationTest {
         assertEquals(expectedOne, todos.get(0));
         assertEquals(expectedTwo, todos.get(1));
     }
+
 
     @Test
     public void givenTodos_whenFindAllByWrongAccount_thenAccountNotFound() {

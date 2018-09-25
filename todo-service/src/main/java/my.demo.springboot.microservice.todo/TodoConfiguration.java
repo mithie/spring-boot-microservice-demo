@@ -24,8 +24,8 @@ public class TodoConfiguration {
 
     public TodoConfiguration() {
         final Stream<String>
-                todoStream = Stream.of(accountOneId.toString() + ",John.Doe@foo.bar,Clean Dishes,false",
-                accountOneId.toString() + ",John.Doe@foo.bar,Watch NBA,false", accountTwoId.toString() + ",Jane.Doe@foo.bar,Pay Bills,false");
+                todoStream = Stream.of(accountOneId.toString() + ",john.doe@foo.com,clean dishes,false",
+                accountOneId.toString() + ",john.doe@foo.com,watch nba,false", accountTwoId.toString() + ",jane.doe@bar.com,call doctor,false");
 
         todos = todoStream.map(todo -> {
             String[] info = todo.split(",");

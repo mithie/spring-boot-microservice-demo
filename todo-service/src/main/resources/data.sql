@@ -1,3 +1,3 @@
 INSERT INTO todo (todoid, accountid, email, description, completed) VALUES ('5838804ae4d24d668987ffee99c0218b', '4e696b86257f48878bae027d8e883638', 'john.doe@foo.com', 'clean dishes', false);
-INSERT INTO todo (todoid, accountid, email, description, completed) VALUES ('caafb549a8954a63b936240ca6bd4f2b', '4e696b86257f48878bae027d8e883638', 'john.doe@foo.com', 'code spring boot app', false);
+INSERT INTO todo (todoid, accountid, email, description, completed) VALUES ('caafb549a8954a63b936240ca6bd4f2b', '4e696b86257f48878bae027d8e883638', 'john.doe@foo.com', 'watch nba', false);
 INSERT INTO todo (todoid, accountid, email, description, completed) VALUES ('d79fe18e7b894c4d9e9f2208163b3a1a', 'a52dc637d9324998bb00fe7f248319fb', 'jane.doe@bar.com', 'call doctor', true);
