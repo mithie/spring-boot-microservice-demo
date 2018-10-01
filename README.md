@@ -1,9 +1,8 @@
 # 08_Database_Support
-This branch is still experimental. Check out on your own risk...
 
 ## Demonstrated Principle
 
-**08_Database_Support** shows how to use [Spring Data REST](https://projects.spring.io/spring-data-rest/) for accessing and manipulating a relational database.
+**08_Database_Support** shows how to use [Spring Data REST](https://projects.spring.io/spring-data-rest/) for accessing and manipulating a relational database. To keep things simple the embedded [H2 database](http://www.h2database.com/html/main.html) will be used for both the `account-service` and the `todo-service`.
 
 ### How does it work?
 
